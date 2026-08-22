@@ -220,15 +220,21 @@
       teardown();
     };
 
-    const onScroll = () => window.requestAnimationFrame(check);
+    // Called directly rather than through requestAnimationFrame: rAF is
+    // throttled in background and non-compositing tabs, which would leave the
+    // wall stuck on its spinner until the tab was focused. check() is one rect
+    // read and unbinds itself on first hit, so the cost is negligible.
+    const onScroll = () => check();
 
     function teardown() {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
+      document.removeEventListener('visibilitychange', onScroll);
     }
 
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
+    document.addEventListener('visibilitychange', onScroll);
     check();
 
     return teardown;
