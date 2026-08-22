@@ -54,7 +54,13 @@ async function fetchPairs(mint: string): Promise<DsPair[]> {
       throw new Error(`DexScreener responded ${res.status}`);
     }
     const body = (await res.json()) as { pairs: DsPair[] | null };
-    return (body.pairs ?? []).filter((p) => p.chainId === 'solana');
+
+    // Only keep pools where this mint is the base asset. DexScreener currently
+    // returns base-side pairs for this endpoint, but a quote-side pair would
+    // carry another token's price and silently corrupt every aggregate.
+    return (body.pairs ?? []).filter(
+      (p) => p.chainId === 'solana' && p.baseToken?.address === mint
+    );
   } finally {
     clearTimeout(timer);
   }

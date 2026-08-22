@@ -24,16 +24,6 @@ const KNOWN_ENTITIES: Record<string, string> = {
   '3gd3dqgtJ4jWfBfLYTX67DALFetjc5iS72sCgRhCkW2u': 'MEXC'
 };
 
-/**
- * Resolve a display label for a holder address.
- * `poolAddresses` covers pools discovered for this specific token at runtime.
- */
-export function labelFor(address: string, poolAddresses: Set<string>): string | null {
-  if (KNOWN_ENTITIES[address]) return KNOWN_ENTITIES[address];
-  if (poolAddresses.has(address)) return 'Liquidity Pool';
-  return null;
-}
-
 export function entityMap(poolAddresses: Set<string>): Map<string, string> {
   const map = new Map<string, string>(Object.entries(KNOWN_ENTITIES));
   for (const address of poolAddresses) {

@@ -19,10 +19,16 @@ function heliusKey(): string | null {
   if (direct) return direct;
 
   // Also accept a full Helius RPC URL, which is how .env.example documents it.
+  // Parsing is guarded: `new URL` throws on a malformed value, and this runs
+  // outside any try/catch on the dashboard's load path.
   const rpc = process.env.RPC_URL?.trim();
   if (rpc && rpc.includes('helius')) {
-    const key = new URL(rpc).searchParams.get('api-key');
-    if (key) return key;
+    try {
+      const key = new URL(rpc).searchParams.get('api-key');
+      if (key) return key;
+    } catch {
+      // Misconfigured RPC_URL — fall through to "no indexing provider".
+    }
   }
   return null;
 }
