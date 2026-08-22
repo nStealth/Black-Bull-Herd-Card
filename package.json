@@ -26,6 +26,7 @@
     "tailwind-merge": "^2.6.1",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3",
+    "vercel": "^56.3.1",
     "vite": "^5.4.21"
   },
   "dependencies": {

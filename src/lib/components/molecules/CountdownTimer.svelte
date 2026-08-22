@@ -1,5 +1,5 @@
 <script lang="ts">
-  let campaignEnds = new Date('2026-08-09T23:59:59Z');
+  let campaignEnds = new Date('2026-08-17T23:59:59Z');
 
   let timeRemaining = { days: 0, hours: 0, minutes: 0, seconds: 0 };
 
