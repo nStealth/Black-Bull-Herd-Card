@@ -1,12 +1,10 @@
 <script lang="ts">
-  // Supply concentration, plus how the herd splits across the card tiers.
   import type { Distribution } from '$lib/dashboard/types';
   import { TIERS } from '$lib/tiers';
   import { count, pct } from '$lib/dashboard/format';
 
   export let distribution: Distribution | null;
 
-  /** Gini is unintuitive on its own, so it ships with a plain-English read. */
   function giniLabel(value: number): string {
     if (value >= 0.95) return 'Extremely concentrated';
     if (value >= 0.85) return 'Highly concentrated';
@@ -15,7 +13,7 @@
     return 'Widely distributed';
   }
 
-  $: concentration = distribution
+  $: rows = distribution
     ? [
         { label: 'Top 10', value: distribution.top10Pct },
         { label: 'Top 50', value: distribution.top50Pct },
@@ -23,41 +21,35 @@
       ]
     : [];
 
-  $: tierRows = distribution
+  $: tiers = distribution
     ? distribution.tierCounts
-        .map((row) => ({ ...row, tier: TIERS.find((t) => t.id === row.tierId) }))
-        .filter((row) => row.tier)
+        .map((r) => ({ ...r, tier: TIERS.find((t) => t.id === r.tierId) }))
+        .filter((r) => r.tier)
         .reverse()
     : [];
 
-  $: maxTierCount = Math.max(1, ...tierRows.map((r) => r.count));
+  $: maxCount = Math.max(1, ...tiers.map((t) => t.count));
 </script>
 
-<section class="d-card p-6 max-md:p-4">
-  <header class="mb-5">
-    <h2 class="text-lg font-bold" style="color: var(--d-text);">Supply Distribution</h2>
-    <p class="mt-0.5 text-xs" style="color: var(--d-text-muted);">
-      How tightly the supply is held, and where the herd sits
-    </p>
+<section class="d-card overflow-hidden">
+  <header class="border-b px-5 py-3.5" style="border-color: var(--d-border);">
+    <h2 class="text-sm font-semibold" style="color: var(--d-text);">Supply Distribution</h2>
   </header>
 
   {#if distribution}
-    <div class="grid grid-cols-3 gap-3 max-md:grid-cols-1">
-      {#each concentration as item (item.label)}
-        <div
-          class="rounded-2xl border p-4"
-          style="border-color: var(--d-border); background: var(--d-surface-solid);"
-        >
-          <p class="text-[0.6875rem] uppercase tracking-wider" style="color: var(--d-text-muted);">
-            {item.label} hold
-          </p>
-          <p class="d-numeric mt-1 text-xl font-bold" style="color: var(--d-text);">
-            {pct(item.value, 1)}
-          </p>
-          <div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background: var(--d-border);">
+    <div class="px-5 py-4">
+      {#each rows as row (row.label)}
+        <div class="mb-3 last:mb-0">
+          <div class="flex items-baseline justify-between">
+            <span class="text-xs" style="color: var(--d-text-2);">{row.label}</span>
+            <span class="d-numeric text-xs font-semibold" style="color: var(--d-text);">
+              {pct(row.value, 1)}
+            </span>
+          </div>
+          <div class="mt-1.5 h-1 overflow-hidden rounded-full" style="background: var(--d-bg-subtle);">
             <div
-              class="h-full rounded-full transition-[width] duration-700"
-              style="width: {Math.min(100, item.value)}%; background: var(--d-accent);"
+              class="h-full rounded-full transition-[width] duration-500"
+              style="width: {Math.min(100, row.value)}%; background: var(--d-accent);"
             />
           </div>
         </div>
@@ -65,48 +57,42 @@
     </div>
 
     <div
-      class="mt-4 flex items-center justify-between gap-4 rounded-2xl border px-4 py-3"
-      style="border-color: var(--d-border); background: var(--d-surface-solid);"
+      class="flex items-center justify-between border-t px-5 py-3"
+      style="border-color: var(--d-border); background: var(--d-surface-2);"
     >
       <div>
-        <p class="text-[0.6875rem] uppercase tracking-wider" style="color: var(--d-text-muted);">
-          Gini coefficient
-        </p>
-        <p class="text-xs" style="color: var(--d-text-secondary);">
+        <p class="d-label">Gini</p>
+        <p class="text-[0.6875rem]" style="color: var(--d-text-2);">
           {giniLabel(distribution.gini)}
         </p>
       </div>
-      <p class="d-numeric text-2xl font-bold" style="color: var(--d-text);">
+      <p class="d-numeric text-lg font-semibold" style="color: var(--d-text);">
         {distribution.gini.toFixed(3)}
       </p>
     </div>
 
-    <h3 class="mb-3 mt-6 text-sm font-bold" style="color: var(--d-text);">Herd by Tier</h3>
-    <div class="flex flex-col gap-2.5">
-      {#each tierRows as row (row.tierId)}
-        <div class="flex items-center gap-3">
-          <span
-            class="w-32 shrink-0 truncate text-xs font-semibold max-md:w-24"
-            style="color: {row.tier?.color};">{row.tier?.name}</span
-          >
-          <div class="h-2 flex-1 overflow-hidden rounded-full" style="background: var(--d-border);">
+    <div class="border-t px-5 py-4" style="border-color: var(--d-border);">
+      <p class="d-label mb-3">Holders by tier</p>
+      {#each tiers as row (row.tierId)}
+        <div class="mb-2.5 flex items-center gap-3 last:mb-0">
+          <span class="w-28 shrink-0 truncate text-xs" style="color: var(--d-text-2);">
+            {row.tier?.name}
+          </span>
+          <div class="h-1 flex-1 overflow-hidden rounded-full" style="background: var(--d-bg-subtle);">
             <div
-              class="h-full rounded-full transition-[width] duration-700"
-              style="width: {(row.count / maxTierCount) * 100}%; background: {row.tier?.color};"
+              class="h-full rounded-full"
+              style="width: {(row.count / maxCount) * 100}%; background: var(--d-accent);"
             />
           </div>
-          <span class="d-numeric w-16 shrink-0 text-right text-xs font-semibold" style="color: var(--d-text);">
+          <span class="d-numeric w-12 shrink-0 text-right text-xs" style="color: var(--d-text);">
             {count(row.count)}
-          </span>
-          <span class="d-numeric w-14 shrink-0 text-right text-[0.6875rem]" style="color: var(--d-text-muted);">
-            {pct(row.supplyPct, 1)}
           </span>
         </div>
       {/each}
     </div>
   {:else}
-    <p class="py-8 text-center text-sm" style="color: var(--d-text-muted);">
-      Distribution analytics unlock with the holder index.
+    <p class="px-5 py-10 text-center text-[0.8125rem]" style="color: var(--d-text-3);">
+      Unlocks with the holder index.
     </p>
   {/if}
 </section>

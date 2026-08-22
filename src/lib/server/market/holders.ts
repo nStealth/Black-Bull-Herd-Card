@@ -6,6 +6,7 @@
 // Helius DAS `getTokenAccounts` method. So holders stay `unavailable` until a
 // Helius key is configured, rather than being faked or partially guessed.
 
+import { env } from '$env/dynamic/private';
 import { ANSEM_MINT, TIERS } from '$lib/tiers';
 import type { Distribution, Holder } from '$lib/dashboard/types';
 
@@ -15,13 +16,13 @@ const MAX_HOLDERS = 10_000;
 const TIMEOUT_MS = 12_000;
 
 function heliusKey(): string | null {
-  const direct = process.env.HELIUS_API_KEY?.trim();
+  const direct = env.HELIUS_API_KEY?.trim();
   if (direct) return direct;
 
   // Also accept a full Helius RPC URL, which is how .env.example documents it.
   // Parsing is guarded: `new URL` throws on a malformed value, and this runs
   // outside any try/catch on the dashboard's load path.
-  const rpc = process.env.RPC_URL?.trim();
+  const rpc = env.RPC_URL?.trim();
   if (rpc && rpc.includes('helius')) {
     try {
       const key = new URL(rpc).searchParams.get('api-key');
@@ -40,7 +41,7 @@ export function holdersAvailable(): boolean {
 function rpcUrl(): string {
   const key = heliusKey();
   if (key) return `https://mainnet.helius-rpc.com/?api-key=${key}`;
-  return process.env.RPC_URL?.trim() || PUBLIC_RPC;
+  return env.RPC_URL?.trim() || PUBLIC_RPC;
 }
 
 async function rpcCall<T>(method: string, params: unknown): Promise<T> {

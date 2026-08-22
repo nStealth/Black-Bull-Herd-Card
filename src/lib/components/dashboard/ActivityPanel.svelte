@@ -1,26 +1,17 @@
 <script lang="ts">
-  // Buy vs sell breakdown per trading window, aggregated across every pool.
+  // Buy vs sell breakdown per window, summed across every pool.
   import type { ActivityStats, WindowStats } from '$lib/dashboard/types';
-  import { compact, count, signedPct, usdCompact } from '$lib/dashboard/format';
+  import { compact, count, usdCompact } from '$lib/dashboard/format';
 
   export let activity: ActivityStats | null;
-  export let loading = false;
-
-  interface Row {
-    key: string;
-    label: string;
-    stats: WindowStats | null;
-    /** Windows we cannot source from a free provider render as locked. */
-    locked: boolean;
-  }
 
   $: rows = [
-    { key: 'h1', label: '1 Hour', stats: activity?.h1 ?? null, locked: false },
-    { key: 'h6', label: '6 Hours', stats: activity?.h6 ?? null, locked: false },
-    { key: 'h24', label: '24 Hours', stats: activity?.h24 ?? null, locked: false },
-    { key: 'd7', label: '7 Days', stats: activity?.d7 ?? null, locked: !activity?.d7 },
-    { key: 'd30', label: '30 Days', stats: activity?.d30 ?? null, locked: !activity?.d30 }
-  ] satisfies Row[];
+    { key: 'h1', label: '1H', stats: activity?.h1 ?? null },
+    { key: 'h6', label: '6H', stats: activity?.h6 ?? null },
+    { key: 'h24', label: '24H', stats: activity?.h24 ?? null },
+    { key: 'd7', label: '7D', stats: activity?.d7 ?? null },
+    { key: 'd30', label: '30D', stats: activity?.d30 ?? null }
+  ];
 
   function buyShare(stats: WindowStats): number {
     const total = stats.buys + stats.sells;
@@ -28,79 +19,69 @@
   }
 </script>
 
-<section class="d-card p-6 max-md:p-4">
-  <header class="mb-5 flex items-baseline justify-between gap-3">
-    <div>
-      <h2 class="text-lg font-bold" style="color: var(--d-text);">Trading Activity</h2>
-      <p class="mt-0.5 text-xs" style="color: var(--d-text-muted);">
-        Buys vs sells across all liquidity pools
-      </p>
-    </div>
+<section class="d-card overflow-hidden">
+  <header class="border-b px-5 py-3.5" style="border-color: var(--d-border);">
+    <h2 class="text-sm font-semibold" style="color: var(--d-text);">Trading Activity</h2>
   </header>
 
-  <div class="flex flex-col gap-3">
-    {#each rows as row (row.key)}
+  <div>
+    {#each rows as row, i (row.key)}
       <div
-        class="rounded-2xl border p-4 transition-colors"
-        style="border-color: var(--d-border); background: var(--d-surface-solid);"
-        class:opacity-55={row.locked}
+        class="px-5 py-3.5"
+        style="border-top: {i === 0 ? 'none' : '1px solid var(--d-border)'};"
       >
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-sm font-semibold" style="color: var(--d-text);">{row.label}</span>
-
-          {#if row.locked}
-            <span
-              class="rounded-md px-2 py-0.5 text-[0.6875rem] font-medium"
-              style="color: var(--d-text-muted); background: var(--d-border);"
-            >
-              Needs an indexed history provider
-            </span>
-          {:else if row.stats && !loading}
-            <div class="d-numeric flex items-center gap-3 text-xs">
-              <span style="color: var(--d-text-muted);">{usdCompact(row.stats.volumeUsd)} vol</span>
-              <span
-                style="color: {row.stats.priceChangePct >= 0
-                  ? 'var(--d-buy)'
-                  : 'var(--d-sell)'};">{signedPct(row.stats.priceChangePct)}</span
-              >
-            </div>
-          {/if}
-        </div>
-
-        {#if row.stats && !row.locked}
+        {#if row.stats}
           {@const share = buyShare(row.stats)}
-          <div class="mt-3 flex items-center gap-3">
-            <span class="d-numeric w-16 shrink-0 text-sm font-bold" style="color: var(--d-buy);">
+          <div class="flex items-center justify-between gap-3">
+            <span class="d-numeric text-xs font-semibold" style="color: var(--d-text-2);">
+              {row.label}
+            </span>
+            <div class="d-numeric flex items-center gap-3 text-[0.6875rem]" style="color: var(--d-text-3);">
+              <span>{usdCompact(row.stats.volumeUsd)}</span>
+              <span
+                style="color: {row.stats.priceChangePct >= 0 ? 'var(--d-up)' : 'var(--d-down)'};"
+              >
+                {row.stats.priceChangePct >= 0 ? '+' : ''}{row.stats.priceChangePct.toFixed(2)}%
+              </span>
+            </div>
+          </div>
+
+          <div class="mt-2.5 flex items-center gap-2.5">
+            <span class="d-numeric w-14 shrink-0 text-xs font-semibold" style="color: var(--d-up);">
               {count(row.stats.buys)}
             </span>
-
             <div
-              class="relative h-2.5 flex-1 overflow-hidden rounded-full"
-              style="background: color-mix(in srgb, var(--d-sell) 30%, transparent);"
+              class="relative h-1 flex-1 overflow-hidden rounded-full"
+              style="background: color-mix(in srgb, var(--d-down) 34%, transparent);"
               role="img"
               aria-label="{share.toFixed(0)} percent buys"
             >
               <div
-                class="h-full rounded-full transition-[width] duration-700 ease-out"
-                style="width: {share}%; background: var(--d-buy);"
+                class="h-full rounded-full transition-[width] duration-500"
+                style="width: {share}%; background: var(--d-up);"
               />
             </div>
-
             <span
-              class="d-numeric w-16 shrink-0 text-right text-sm font-bold"
-              style="color: var(--d-sell);"
+              class="d-numeric w-14 shrink-0 text-right text-xs font-semibold"
+              style="color: var(--d-down);"
             >
               {count(row.stats.sells)}
             </span>
           </div>
 
-          <div class="mt-1.5 flex justify-between text-[0.6875rem]" style="color: var(--d-text-muted);">
-            <span>{share.toFixed(1)}% buys</span>
-            <span>{compact(row.stats.buys + row.stats.sells)} trades</span>
-            <span>{(100 - share).toFixed(1)}% sells</span>
+          <p class="mt-1.5 text-[0.6875rem]" style="color: var(--d-text-3);">
+            {share.toFixed(1)}% buy pressure · {compact(row.stats.buys + row.stats.sells)} trades
+          </p>
+        {:else}
+          <div class="flex items-center justify-between gap-3">
+            <span class="d-numeric text-xs font-semibold" style="color: var(--d-text-3);">
+              {row.label}
+            </span>
+            <span class="text-[0.6875rem]" style="color: var(--d-text-3);">
+              Requires an indexed history provider
+            </span>
           </div>
-        {:else if row.locked}
-          <div class="mt-3 h-2.5 rounded-full" style="background: var(--d-border);" aria-hidden="true" />
+          <div class="mt-2.5 h-1 rounded-full" style="background: var(--d-border);" aria-hidden="true" />
         {/if}
       </div>
     {/each}

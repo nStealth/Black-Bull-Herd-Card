@@ -52,12 +52,12 @@
 
 <section class="d-card overflow-hidden">
   <header
-    class="flex flex-wrap items-center justify-between gap-3 border-b px-6 py-4 max-md:px-4"
+    class="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3.5 max-md:px-4"
     style="border-color: var(--d-border);"
   >
     <div>
-      <h2 class="text-lg font-bold" style="color: var(--d-text);">Full Holder Rankings</h2>
-      <p class="mt-0.5 text-xs" style="color: var(--d-text-muted);">
+      <h2 class="text-sm font-semibold" style="color: var(--d-text);">Full Rankings</h2>
+      <p class="mt-0.5 text-[0.6875rem]" style="color: var(--d-text-3);">
         Showing {count(filtered.length)} of {count(Math.max(0, indexed - 10))} ranked below the top 10
       </p>
     </div>
@@ -68,22 +68,22 @@
         type="search"
         bind:value={query}
         placeholder="Search address…"
-        class="d-numeric w-56 rounded-xl border px-3 py-2 text-xs outline-none transition-colors focus:border-[var(--d-border-strong)] max-md:w-full"
-        style="background: var(--d-surface-solid); border-color: var(--d-border); color: var(--d-text);"
+        class="d-numeric w-52 rounded-lg border px-2.5 py-1.5 text-xs outline-none transition-colors focus:border-[var(--d-accent)] max-md:w-full"
+        style="background: var(--d-bg-subtle); border-color: var(--d-border); color: var(--d-text);"
       />
     </label>
   </header>
 
   <div class="max-h-[640px] overflow-y-auto">
     <table class="w-full border-collapse text-sm">
-      <thead class="sticky top-0 z-10" style="background: var(--d-surface-solid);">
-        <tr class="text-[0.6875rem] uppercase tracking-wider" style="color: var(--d-text-muted);">
-          <th class="px-6 py-3 text-left font-semibold max-md:px-3">Rank</th>
-          <th class="px-3 py-3 text-left font-semibold">Wallet</th>
-          <th class="px-3 py-3 text-left font-semibold max-lg:hidden">Tier</th>
-          <th class="px-3 py-3 text-right font-semibold">Balance</th>
-          <th class="px-3 py-3 text-right font-semibold max-md:hidden">Value</th>
-          <th class="px-6 py-3 text-right font-semibold max-md:px-3">Supply</th>
+      <thead class="sticky top-0 z-10" style="background: var(--d-surface-2);">
+        <tr class="text-[0.625rem] uppercase tracking-wider" style="color: var(--d-text-3);">
+          <th class="px-5 py-2.5 text-left font-semibold max-md:px-3">Rank</th>
+          <th class="px-3 py-2.5 text-left font-semibold">Wallet</th>
+          <th class="px-3 py-2.5 text-left font-semibold max-lg:hidden">Tier</th>
+          <th class="px-3 py-2.5 text-right font-semibold">Balance</th>
+          <th class="px-3 py-2.5 text-right font-semibold max-md:hidden">Value</th>
+          <th class="px-5 py-2.5 text-right font-semibold max-md:px-3">Supply</th>
         </tr>
       </thead>
 
@@ -91,18 +91,18 @@
         {#each filtered as holder (holder.owner)}
           {@const tier = tierOf(holder.tierId)}
           <tr
-            class="transition-colors hover:bg-[var(--d-surface-hover)]"
+            class="transition-colors hover:bg-[var(--d-hover)]"
             style="border-top: 1px solid var(--d-border);"
           >
-            <td class="d-numeric px-6 py-2.5 font-semibold max-md:px-3" style="color: var(--d-text-muted);">
+            <td class="d-numeric px-5 py-2 text-xs max-md:px-3" style="color: var(--d-text-3);">
               {holder.rank}
             </td>
-            <td class="px-3 py-2.5">
+            <td class="px-3 py-2">
               <a
                 href="https://solscan.io/account/{holder.owner}"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="d-numeric hover:underline"
+                class="d-numeric text-xs hover:underline"
                 style="color: var(--d-text);"
               >
                 {shortAddress(holder.owner, 6, 6)}
@@ -110,21 +110,21 @@
               {#if holder.entity}
                 <span
                   class="ml-2 rounded px-1.5 py-0.5 text-[0.625rem] font-semibold"
-                  style="color: var(--d-accent); background: color-mix(in srgb, var(--d-accent) 14%, transparent);"
+                  style="color: var(--d-accent); background: var(--d-accent-soft);"
                   >{holder.entity}</span
                 >
               {/if}
             </td>
-            <td class="px-3 py-2.5 max-lg:hidden">
-              <span class="text-xs font-medium" style="color: {tier.color};">{tier.name}</span>
+            <td class="px-3 py-2 max-lg:hidden">
+              <span class="text-xs" style="color: var(--d-text-2);">{tier.name}</span>
             </td>
-            <td class="d-numeric px-3 py-2.5 text-right font-semibold" style="color: var(--d-text);">
+            <td class="d-numeric px-3 py-2 text-right text-xs font-semibold" style="color: var(--d-text);">
               {compact(holder.balance)}
             </td>
-            <td class="d-numeric px-3 py-2.5 text-right max-md:hidden" style="color: var(--d-text-secondary);">
+            <td class="d-numeric px-3 py-2 text-right text-xs max-md:hidden" style="color: var(--d-text-2);">
               {priceUsd > 0 ? usdCompact(holder.balance * priceUsd) : '—'}
             </td>
-            <td class="d-numeric px-6 py-2.5 text-right max-md:px-3" style="color: var(--d-text-secondary);">
+            <td class="d-numeric px-5 py-2 text-right text-xs max-md:px-3" style="color: var(--d-text-2);">
               {pct(holder.percentSupply, 3)}
             </td>
           </tr>
@@ -132,7 +132,7 @@
 
         {#if filtered.length === 0}
           <tr>
-            <td colspan="6" class="px-6 py-10 text-center text-sm" style="color: var(--d-text-muted);">
+            <td colspan="6" class="px-5 py-10 text-center text-[0.8125rem]" style="color: var(--d-text-3);">
               No holder matches “{query}” in the rows loaded so far.
             </td>
           </tr>
@@ -142,25 +142,25 @@
   </div>
 
   <footer
-    class="flex flex-col items-center gap-2 border-t px-6 py-4"
+    class="flex flex-col items-center gap-2 border-t px-5 py-3.5"
     style="border-color: var(--d-border);"
   >
     {#if error}
-      <p class="text-xs" style="color: var(--d-sell);">{error}</p>
+      <p class="text-xs" style="color: var(--d-down);">{error}</p>
     {/if}
 
     {#if hasMore}
       <button
         type="button"
-        class="rounded-xl border px-5 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50"
-        style="background: var(--d-surface-solid); border-color: var(--d-border); color: var(--d-text);"
+        class="rounded-lg border px-4 py-2 text-xs font-semibold transition-colors hover:bg-[var(--d-hover)] disabled:opacity-50"
+        style="background: var(--d-bg-subtle); border-color: var(--d-border); color: var(--d-text);"
         on:click={loadMore}
         disabled={loading}
       >
         {loading ? 'Loading…' : `Load ${PAGE_SIZE} more`}
       </button>
     {:else if rows.length > 0}
-      <p class="text-xs" style="color: var(--d-text-muted);">
+      <p class="text-[0.6875rem]" style="color: var(--d-text-3);">
         All {count(indexed)} indexed holders loaded.
       </p>
     {/if}
