@@ -5,13 +5,25 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import { ANSEM_MINT } from './tiers';
 import { rpcQueue } from './rpcQueue';
 
-const RPC_URL = import.meta.env.VITE_RPC_URL || 'https://api.mainnet-beta.solana.com';
+const PUBLIC_RPC = 'https://api.mainnet-beta.solana.com';
+
+/**
+ * Read the RPC endpoint server-side only.
+ *
+ * This module is also imported by browser code (connectWallet / disconnectWallet),
+ * so `process` is guarded. It is deliberately not a VITE_ variable: those are
+ * inlined into the client bundle, which would publish the API key.
+ */
+function rpcEndpoint(): string {
+  if (typeof process === 'undefined' || !process.env) return PUBLIC_RPC;
+  return process.env.RPC_URL?.trim() || PUBLIC_RPC;
+}
 
 let connection: Connection | null = null;
 
 function getConnection(): Connection {
   if (!connection) {
-    connection = new Connection(RPC_URL, {
+    connection = new Connection(rpcEndpoint(), {
       commitment: 'confirmed',
       confirmTransactionInitialTimeout: 60000
     });

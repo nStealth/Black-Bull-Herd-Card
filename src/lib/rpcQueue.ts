@@ -30,9 +30,15 @@ function isRateLimited(error: unknown): boolean {
  */
 async function acquireLock(): Promise<boolean> {
   if (!redis || !isRedisReady()) return true; // fallback: no lock = go ahead
-  const now = Date.now().toString();
-  const ok = await redis.set(LOCK_KEY, now, { nx: true, px: LOCK_TTL_MS });
-  return ok === 'OK';
+  try {
+    const now = Date.now().toString();
+    const ok = await redis.set(LOCK_KEY, now, { nx: true, px: LOCK_TTL_MS });
+    return ok === 'OK';
+  } catch {
+    // Redis is unreachable. Proceed unthrottled rather than stalling the queue;
+    // the per-request retry logic still absorbs any 429s that result.
+    return true;
+  }
 }
 
 /**
@@ -58,6 +64,16 @@ async function runNext() {
   if (running) return;
   running = true;
 
+  try {
+    await drainQueue();
+  } finally {
+    // Without this, a throw from the Redis lock leaves `running` stuck at true
+    // and every later rpcQueue() call hangs forever on this instance.
+    running = false;
+  }
+}
+
+async function drainQueue() {
   while (localQueue.length > 0) {
     // Distributed rate-limiting: wait for global lock
     await waitForLock();
@@ -91,8 +107,6 @@ async function runNext() {
       continue;
     }
   }
-
-  running = false;
 }
 
 /**

@@ -5,6 +5,10 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getEntry, saveTweet, getSubmittedCount } from '$lib/db';
+import { clientKey, rateLimit } from '$lib/server/rateLimit';
+
+const RATE_LIMIT = 10;
+const RATE_WINDOW_SEC = 60;
 
 // Validate Twitter/X URL format
 function isValidTweetUrl(url: string): boolean {
@@ -38,6 +42,14 @@ function isValidTweetUrl(url: string): boolean {
 
 export const POST: RequestHandler = async ({ request }) => {
   try {
+    const limit = await rateLimit(`submit:${clientKey(request)}`, RATE_LIMIT, RATE_WINDOW_SEC);
+    if (!limit.allowed) {
+      return json(
+        { ok: false, reason: 'rate_limited' },
+        { status: 429, headers: { 'retry-after': String(limit.retryAfterSec) } }
+      );
+    }
+
     const body = await request.json();
     const { wallet, tweetUrl } = body;
     

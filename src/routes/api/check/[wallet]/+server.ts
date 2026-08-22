@@ -4,10 +4,16 @@
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getAnsemBalance } from '$lib/solana';
 import { getTier, getRankTier } from '$lib/tiers';
+import { getAnsemBalance, isValidPublicKey } from '$lib/solana';
 import { getEntry, saveEntry } from '$lib/db';
 import { redis, isRedisReady } from '$lib/redis';
+import { clientKey, rateLimit } from '$lib/server/rateLimit';
+
+// Every miss writes a row, so an unthrottled caller could grow the table with
+// arbitrary well-formed addresses.
+const RATE_LIMIT = 30;
+const RATE_WINDOW_SEC = 60;
 
 const CACHE_TTL_SEC = 30; // 30 seconds
 
@@ -35,18 +41,27 @@ async function setCached(wallet: string, data: unknown): Promise<void> {
   }
 }
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ params, request }) => {
   const { wallet } = params;
 
-  // Validate wallet format
-  if (!wallet || wallet.length < 32 || wallet.length > 44) {
+  // Validate wallet format, including the base58 charset, before any
+  // cache lookup, RPC call or database write.
+  if (!wallet || !isValidPublicKey(wallet)) {
     return json({ error: 'Invalid wallet address' }, { status: 400 });
   }
 
-  // Check distributed Redis cache first
+  // Check distributed Redis cache first — cache hits are not rate limited.
   const cached = await getCached(wallet);
   if (cached) {
     return json(cached);
+  }
+
+  const limit = await rateLimit(`check:${clientKey(request)}`, RATE_LIMIT, RATE_WINDOW_SEC);
+  if (!limit.allowed) {
+    return json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: { 'retry-after': String(limit.retryAfterSec) } }
+    );
   }
 
   try {
