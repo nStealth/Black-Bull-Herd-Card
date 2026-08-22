@@ -7,6 +7,7 @@
   import Particles from "$lib/components/molecules/Particles.svelte";
   import Confetti from "$lib/components/molecules/Confetti.svelte";
   import HeroSection from "$lib/components/organisms/HeroSection.svelte";
+  import XWall from '$lib/components/organisms/XWall.svelte';
   import WhatSection from "$lib/components/organisms/WhatSection.svelte";
   import Card from "$lib/components/ui/Card.svelte";
   import Button from "$lib/components/ui/Button.svelte";
@@ -399,6 +400,9 @@
       </Card>
     {/if}
   </div>
+
+  <!-- Live X wall -->
+  <XWall />
 
   <!-- Community Badge -->
   <div
