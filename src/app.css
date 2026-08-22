@@ -104,3 +104,115 @@
   .animate-delay-5 { animation-delay: 0.5s; }
   .animate-delay-6 { animation-delay: 0.6s; }
 }
+
+/* ---------------------------------------------------------------------------
+   Dashboard theming
+   Only the dashboard is dual-theme. The attribute lives on <html> while the
+   dashboard route is mounted, so the shared header and footer follow along.
+   Every other page keeps the original dark-only palette untouched.
+   --------------------------------------------------------------------------- */
+@layer base {
+  html[data-dash-theme='dark'] {
+    --d-bg: #08080d;
+    --d-bg-deep: #05050a;
+    --d-surface: rgba(22, 22, 32, 0.72);
+    --d-surface-solid: #16161f;
+    --d-surface-hover: rgba(34, 34, 47, 0.85);
+    --d-border: rgba(255, 255, 255, 0.09);
+    --d-border-strong: rgba(255, 255, 255, 0.18);
+    --d-text: #f5f5f7;
+    --d-text-secondary: #a3a3b5;
+    --d-text-muted: #6a6a7d;
+    --d-buy: #22c55e;
+    --d-sell: #ef4444;
+    --d-accent: #f59e0b;
+    --d-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.85);
+    --d-grid: rgba(255, 255, 255, 0.045);
+    --d-glow-a: rgba(239, 68, 68, 0.16);
+    --d-glow-b: rgba(245, 158, 11, 0.12);
+    --d-glow-c: rgba(168, 85, 247, 0.1);
+    color-scheme: dark;
+  }
+
+  html[data-dash-theme='light'] {
+    --d-bg: #f4f5f9;
+    --d-bg-deep: #eceef4;
+    --d-surface: rgba(255, 255, 255, 0.82);
+    --d-surface-solid: #ffffff;
+    --d-surface-hover: rgba(255, 255, 255, 0.96);
+    --d-border: rgba(15, 18, 34, 0.1);
+    --d-border-strong: rgba(15, 18, 34, 0.2);
+    --d-text: #10121c;
+    --d-text-secondary: #4d5163;
+    --d-text-muted: #80859a;
+    --d-buy: #15803d;
+    --d-sell: #dc2626;
+    --d-accent: #b45309;
+    --d-shadow: 0 24px 60px -34px rgba(15, 18, 34, 0.35);
+    --d-grid: rgba(15, 18, 34, 0.05);
+    --d-glow-a: rgba(239, 68, 68, 0.1);
+    --d-glow-b: rgba(245, 158, 11, 0.1);
+    --d-glow-c: rgba(59, 130, 246, 0.08);
+    color-scheme: light;
+  }
+
+  /* Repaint the page shell and shared chrome to match the active theme. */
+  html[data-dash-theme] body {
+    background: var(--d-bg);
+    color: var(--d-text);
+  }
+
+  html[data-dash-theme] body::before {
+    background:
+      radial-gradient(ellipse at 18% 12%, var(--d-glow-a) 0%, transparent 55%),
+      radial-gradient(ellipse at 82% 78%, var(--d-glow-b) 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 50%, var(--d-glow-c) 0%, transparent 70%);
+  }
+
+  html[data-dash-theme] header,
+  html[data-dash-theme] footer {
+    background: color-mix(in srgb, var(--d-bg) 88%, transparent);
+    border-color: var(--d-border);
+    color: var(--d-text);
+  }
+
+  html[data-dash-theme='light'] header a,
+  html[data-dash-theme='light'] footer,
+  html[data-dash-theme='light'] footer p,
+  html[data-dash-theme='light'] footer span,
+  html[data-dash-theme='light'] footer a,
+  html[data-dash-theme='light'] footer button,
+  html[data-dash-theme='light'] footer code {
+    color: var(--d-text-secondary);
+  }
+
+  html[data-dash-theme='light'] header a span:first-child,
+  html[data-dash-theme='light'] footer p:first-child {
+    color: var(--d-text);
+  }
+
+  html[data-dash-theme='light'] ::-webkit-scrollbar-track {
+    background: var(--d-bg-deep);
+  }
+
+  html[data-dash-theme='light'] ::-webkit-scrollbar-thumb {
+    background: rgba(15, 18, 34, 0.18);
+  }
+}
+
+@layer components {
+  .d-card {
+    background: var(--d-surface);
+    border: 1px solid var(--d-border);
+    border-radius: 20px;
+    box-shadow: var(--d-shadow);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .d-numeric {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+}

@@ -7,6 +7,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0a0a0f" />
     <meta name="description" content="Black Bull Herd Card 🐂🀄️ - Claim your exclusive NFT as an $ANSEM holder" />
+    <script>
+      // Paint the dashboard theme before first render so light mode never flashes dark.
+      (function () {
+        try {
+          if (!location.pathname.startsWith('/dashboard')) return;
+          var stored = localStorage.getItem('bbh-dashboard-theme');
+          var theme =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: light)').matches
+                ? 'light'
+                : 'dark';
+          document.documentElement.setAttribute('data-dash-theme', theme);
+        } catch (e) {}
+      })();
+    </script>
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">

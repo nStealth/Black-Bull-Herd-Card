@@ -62,6 +62,16 @@
           <span class="max-md:hidden">Home</span>
         </a>
         <a
+          href="/dashboard"
+          class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-text-secondary font-medium text-[0.9375rem] transition-all hover:text-text-primary hover:bg-white/5 border {$page
+            .url.pathname === '/dashboard'
+            ? 'bg-red-500/12 text-text-primary border-red-500/30'
+            : 'border-transparent'}"
+        >
+          <span class="text-[0.9375rem] leading-none">📊</span>
+          <span class="max-md:hidden">Dashboard</span>
+        </a>
+        <a
           href="/rules"
           class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-text-secondary font-medium text-[0.9375rem] transition-all hover:text-text-primary hover:bg-white/5 border {$page
             .url.pathname === '/rules'

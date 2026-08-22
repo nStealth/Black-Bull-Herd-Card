@@ -264,9 +264,37 @@ DATABASE_URL=postgresql://username:password@ep-xxx-xxx-123456.us-east-2.aws.neon
 REDIS_URL=https://your-redis-endpoint.upstash.io
 REDIS_TOKEN=your_upstash_token
 
+# Dashboard holder leaderboard (optional).
+# Left unset if RPC_URL already points at Helius.
+HELIUS_API_KEY=your_helius_api_key
+
 # Optional: Twitter Bearer Token for future auto-verification
 # X_BEARER_TOKEN=your_twitter_bearer_token
 ```
+
+> **Note on `RPC_URL`:** without it the app falls back to Solana's public
+> endpoint, which rate-limits aggressively (HTTP 429). Set it in production.
+
+### Dashboard Data Sources
+
+`/dashboard` reads live on-chain and market data. Each panel sources
+independently, so a missing provider degrades one panel instead of the page.
+
+| Panel | Source | Key required |
+|---|---|---|
+| Price, market cap, liquidity, volume, buy/sell counts (1h/6h/24h) | DexScreener, aggregated across every Solana pool | No |
+| Total supply | `getTokenSupply` on the configured RPC | No |
+| Holder leaderboard, supply distribution, tier breakdown | Helius DAS `getTokenAccounts` | **Yes** — `HELIUS_API_KEY` |
+| 7-day / 30-day trade counts and unique buyers | Needs an indexed history provider | Not yet wired |
+
+Holder enumeration is impossible on the free public RPC — `getTokenAccounts`
+and `getTokenLargestAccounts` are rate-limited there. Until `HELIUS_API_KEY` is
+set the leaderboard renders an explicit locked state rather than partial or
+estimated numbers. A free Helius key is sufficient.
+
+Responses are cached through Upstash Redis when configured (30s for market
+data, 15min for the holder index) and fall back to a per-instance memory cache
+otherwise. Failed upstream calls are never cached.
 
 ### Database Setup
 
