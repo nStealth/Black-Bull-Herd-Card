@@ -14,6 +14,10 @@
   import DistributionPanel from '$lib/components/dashboard/DistributionPanel.svelte';
   import PairsPanel from '$lib/components/dashboard/PairsPanel.svelte';
   import NoticeCard from '$lib/components/dashboard/NoticeCard.svelte';
+  import PriceChart from '$lib/components/dashboard/PriceChart.svelte';
+  import TradeFeed from '$lib/components/dashboard/TradeFeed.svelte';
+  import SecurityPanel from '$lib/components/dashboard/SecurityPanel.svelte';
+  import MarketContextPanel from '$lib/components/dashboard/MarketContextPanel.svelte';
 
   export let data: PageData;
 
@@ -33,6 +37,8 @@
   $: podium = data.holders.slice(0, 10);
   $: tableRows = data.holders.slice(10);
   $: holdersLive = status.holders === 'live';
+  $: security = snapshot.security;
+  $: marketStats = snapshot.market;
   $: syncedLabel = now && relativeAge(lastSynced);
 
   async function refresh() {
@@ -136,7 +142,7 @@
     />
   {:else}
     <!-- Key metrics -->
-    <div class="mb-4 grid grid-cols-4 gap-3 max-lg:grid-cols-2">
+    <div class="mb-4 grid grid-cols-5 gap-3 max-xl:grid-cols-4 max-lg:grid-cols-2">
       <StatTile
         label="Price"
         value={usd(overview.priceUsd, 4)}
@@ -147,6 +153,12 @@
         label="Market Cap"
         value={usdCompact(overview.marketCapUsd)}
         hint="FDV {usdCompact(overview.fdvUsd)}"
+      />
+      <StatTile
+        label="Rank"
+        value={marketStats?.rank ? `#${marketStats.rank}` : '—'}
+        hint="by market cap"
+        muted={!marketStats?.rank}
       />
       <StatTile
         label="Liquidity"
@@ -172,10 +184,23 @@
         muted={!snapshot.distribution}
       />
       <StatTile
+        label="From ATH"
+        value={marketStats?.athChangePct != null
+          ? `${marketStats.athChangePct.toFixed(1)}%`
+          : '—'}
+        hint={marketStats?.ath ? `ATH ${usd(marketStats.ath, 4)}` : 'all-time high'}
+        muted={marketStats?.athChangePct == null}
+      />
+      <StatTile
         label="Market Age"
         value={overview.pairCreatedAt ? ageSince(overview.pairCreatedAt) : '—'}
         hint="since first pool"
       />
+    </div>
+
+    <!-- Price history -->
+    <div class="mb-4">
+      <PriceChart initial={data.chart} />
     </div>
 
     <!-- Activity, liquidity, distribution -->
@@ -183,6 +208,13 @@
       <ActivityPanel {activity} />
       <PairsPanel pairs={overview.pairs} />
       <DistributionPanel distribution={snapshot.distribution} />
+    </div>
+
+    <!-- Risk, cross-market context, order flow -->
+    <div class="mb-4 grid grid-cols-3 gap-3 max-lg:grid-cols-1">
+      <SecurityPanel {security} />
+      <MarketContextPanel market={marketStats} priceUsd={overview.priceUsd} />
+      <TradeFeed initial={data.trades} />
     </div>
 
     <!-- Holders -->
@@ -201,9 +233,13 @@
     <!-- Sources -->
     <p class="mt-6 text-[0.6875rem] leading-relaxed" style="color: var(--d-text-3);">
       Price, liquidity, volume and trade counts aggregated live from DexScreener across
-      {overview.pairs.length} Solana pools. Supply read on-chain from the mint.
+      {overview.pairs.length} Solana pools. Supply, mint authority and freeze authority read
+      on-chain from the mint. Candles and the live tape from GeckoTerminal on the deepest pool;
+      rank, all-time high/low and the 7d/30d changes from CoinGecko across every venue.
       {#if !holdersLive}Holder analytics require an indexing provider.{/if}
-      7-day and 30-day trade counts require an indexed history provider.
+      Buy/sell counts are published up to 24h only — the 7d and 30d rows carry price and volume
+      with counts left blank rather than estimated. When a free-tier provider rate-limits, the
+      last good payload is shown rather than a blank panel; the header stamp says how old it is.
     </p>
   {/if}
 </div>

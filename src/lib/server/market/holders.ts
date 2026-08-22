@@ -5,65 +5,19 @@
 // `getProgramAccounts` (which public RPC rate-limits into uselessness) or the
 // Helius DAS `getTokenAccounts` method. So holders stay `unavailable` until a
 // Helius key is configured, rather than being faked or partially guessed.
+//
+// The endpoint resolution and JSON-RPC transport live in ./rpc so the supply
+// read, the holder index and the mint-security check all share one RPC_URL.
 
-import { env } from '$env/dynamic/private';
 import { ANSEM_MINT, TIERS } from '$lib/tiers';
 import type { Distribution, Holder } from '$lib/dashboard/types';
+import { heliusKey, rpcCall } from './rpc';
 
-const PUBLIC_RPC = 'https://api.mainnet-beta.solana.com';
 const DAS_PAGE_SIZE = 1000;
 const MAX_HOLDERS = 10_000;
-const TIMEOUT_MS = 12_000;
-
-function heliusKey(): string | null {
-  const direct = env.HELIUS_API_KEY?.trim();
-  if (direct) return direct;
-
-  // Also accept a full Helius RPC URL, which is how .env.example documents it.
-  // Parsing is guarded: `new URL` throws on a malformed value, and this runs
-  // outside any try/catch on the dashboard's load path.
-  const rpc = env.RPC_URL?.trim();
-  if (rpc && rpc.includes('helius')) {
-    try {
-      const key = new URL(rpc).searchParams.get('api-key');
-      if (key) return key;
-    } catch {
-      // Misconfigured RPC_URL — fall through to "no indexing provider".
-    }
-  }
-  return null;
-}
 
 export function holdersAvailable(): boolean {
   return heliusKey() !== null;
-}
-
-function rpcUrl(): string {
-  const key = heliusKey();
-  if (key) return `https://mainnet.helius-rpc.com/?api-key=${key}`;
-  return env.RPC_URL?.trim() || PUBLIC_RPC;
-}
-
-async function rpcCall<T>(method: string, params: unknown): Promise<T> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-  try {
-    const res = await fetch(rpcUrl(), {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', id: 'dashboard', method, params }),
-      signal: controller.signal
-    });
-    if (!res.ok) throw new Error(`RPC ${method} responded ${res.status}`);
-
-    const body = (await res.json()) as { result?: T; error?: { message: string } };
-    if (body.error) throw new Error(`RPC ${method}: ${body.error.message}`);
-    if (body.result === undefined) throw new Error(`RPC ${method} returned no result`);
-    return body.result;
-  } finally {
-    clearTimeout(timer);
-  }
 }
 
 export interface SupplyInfo {

@@ -1,5 +1,9 @@
 <script lang="ts">
   // Buy vs sell breakdown per window, summed across every pool.
+  //
+  // Up to 24h the source publishes trade counts, so the row draws the buy/sell
+  // split. Beyond that only price and volume exist, so those rows drop the bar
+  // rather than implying a 50/50 split that was never measured.
   import type { ActivityStats, WindowStats } from '$lib/dashboard/types';
   import { compact, count, usdCompact } from '$lib/dashboard/format';
 
@@ -13,9 +17,16 @@
     { key: 'd30', label: '30D', stats: activity?.d30 ?? null }
   ];
 
-  function buyShare(stats: WindowStats): number {
-    const total = stats.buys + stats.sells;
-    return total === 0 ? 50 : (stats.buys / total) * 100;
+  /** A row can draw the split only when both counts were actually reported. */
+  function counted(
+    stats: WindowStats | null
+  ): stats is WindowStats & { buys: number; sells: number } {
+    return stats !== null && stats.buys !== null && stats.sells !== null;
+  }
+
+  function buyShare(buys: number, sells: number): number {
+    const total = buys + sells;
+    return total === 0 ? 50 : (buys / total) * 100;
   }
 </script>
 
@@ -26,17 +37,16 @@
 
   <div>
     {#each rows as row, i (row.key)}
-      <div
-        class="px-5 py-3.5"
-        style="border-top: {i === 0 ? 'none' : '1px solid var(--d-border)'};"
-      >
+      <div class="px-5 py-3.5" style="border-top: {i === 0 ? 'none' : '1px solid var(--d-border)'};">
         {#if row.stats}
-          {@const share = buyShare(row.stats)}
           <div class="flex items-center justify-between gap-3">
             <span class="d-numeric text-xs font-semibold" style="color: var(--d-text-2);">
               {row.label}
             </span>
-            <div class="d-numeric flex items-center gap-3 text-[0.6875rem]" style="color: var(--d-text-3);">
+            <div
+              class="d-numeric flex items-center gap-3 text-[0.6875rem]"
+              style="color: var(--d-text-3);"
+            >
               <span>{usdCompact(row.stats.volumeUsd)}</span>
               <span
                 style="color: {row.stats.priceChangePct >= 0 ? 'var(--d-up)' : 'var(--d-down)'};"
@@ -46,40 +56,45 @@
             </div>
           </div>
 
-          <div class="mt-2.5 flex items-center gap-2.5">
-            <span class="d-numeric w-14 shrink-0 text-xs font-semibold" style="color: var(--d-up);">
-              {count(row.stats.buys)}
-            </span>
-            <div
-              class="relative h-1 flex-1 overflow-hidden rounded-full"
-              style="background: color-mix(in srgb, var(--d-down) 34%, transparent);"
-              role="img"
-              aria-label="{share.toFixed(0)} percent buys"
-            >
+          {#if counted(row.stats)}
+            {@const share = buyShare(row.stats.buys, row.stats.sells)}
+            <div class="mt-2.5 flex items-center gap-2.5">
+              <span class="d-numeric w-14 shrink-0 text-xs font-semibold" style="color: var(--d-up);">
+                {count(row.stats.buys)}
+              </span>
               <div
-                class="h-full rounded-full transition-[width] duration-500"
-                style="width: {share}%; background: var(--d-up);"
-              />
+                class="relative h-1 flex-1 overflow-hidden rounded-full"
+                style="background: color-mix(in srgb, var(--d-down) 34%, transparent);"
+                role="img"
+                aria-label="{share.toFixed(0)} percent buys"
+              >
+                <div
+                  class="h-full rounded-full transition-[width] duration-500"
+                  style="width: {share}%; background: var(--d-up);"
+                />
+              </div>
+              <span
+                class="d-numeric w-14 shrink-0 text-right text-xs font-semibold"
+                style="color: var(--d-down);"
+              >
+                {count(row.stats.sells)}
+              </span>
             </div>
-            <span
-              class="d-numeric w-14 shrink-0 text-right text-xs font-semibold"
-              style="color: var(--d-down);"
-            >
-              {count(row.stats.sells)}
-            </span>
-          </div>
 
-          <p class="mt-1.5 text-[0.6875rem]" style="color: var(--d-text-3);">
-            {share.toFixed(1)}% buy pressure · {compact(row.stats.buys + row.stats.sells)} trades
-          </p>
+            <p class="mt-1.5 text-[0.6875rem]" style="color: var(--d-text-3);">
+              {share.toFixed(1)}% buy pressure · {compact(row.stats.buys + row.stats.sells)} trades
+            </p>
+          {:else}
+            <p class="mt-2 text-[0.6875rem]" style="color: var(--d-text-3);">
+              Price and volume from OHLCV history · trade counts not published beyond 24h
+            </p>
+          {/if}
         {:else}
           <div class="flex items-center justify-between gap-3">
             <span class="d-numeric text-xs font-semibold" style="color: var(--d-text-3);">
               {row.label}
             </span>
-            <span class="text-[0.6875rem]" style="color: var(--d-text-3);">
-              Requires an indexed history provider
-            </span>
+            <span class="text-[0.6875rem]" style="color: var(--d-text-3);">Unavailable</span>
           </div>
           <div class="mt-2.5 h-1 rounded-full" style="background: var(--d-border);" aria-hidden="true" />
         {/if}
