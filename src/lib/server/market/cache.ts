@@ -52,7 +52,7 @@ async function writeShared(key: string, value: unknown, ttlSec: number): Promise
   }
 }
 
-interface CacheOptions {
+interface CacheOptions<T> {
   /**
    * How long a value stays usable as an emergency fallback after its normal TTL
    * expires. Set this for providers that rate-limit: a 429 then serves the last
@@ -69,6 +69,17 @@ interface CacheOptions {
    * staleTtlSec, since the stale copy is what gets served.
    */
   serveStaleWhileRevalidating?: boolean;
+  /**
+   * Decide whether a freshly fetched value should replace the one already
+   * cached. Return false to keep the old one.
+   *
+   * Needed because a refresh is not automatically an improvement. The holder
+   * walk is bounded by wall-clock time, so a slow minute yields fewer pages
+   * than a fast one — and without this a truncated walk silently overwrote a
+   * far more complete index, dropping observed coverage from 87% to 51% and
+   * pinning that for the whole TTL.
+   */
+  shouldReplace?: (fresh: T, previous: T) => boolean;
 }
 
 const staleKey = (key: string) => `${key}:stale`;
@@ -101,7 +112,7 @@ export async function cached<T>(
   key: string,
   ttlSec: number,
   fetcher: () => Promise<T>,
-  options: CacheOptions = {}
+  options: CacheOptions<T> = {}
 ): Promise<T> {
   const local = readMemory<T>(key);
   if (local !== null) return local;
@@ -129,6 +140,7 @@ export async function cached<T>(
         void run
           .then(async (value) => {
             if (value === null || value === undefined) return;
+            if (options.shouldReplace && !options.shouldReplace(value, stale)) return;
             writeMemory(key, value, Math.min(ttlSec, 30));
             await writeShared(key, value, ttlSec);
             writeMemory(staleKey(key), value, options.staleTtlSec as number);
@@ -170,6 +182,14 @@ export async function cached<T>(
       if (stale !== null && stale !== undefined) return stale;
     }
     return fresh;
+  }
+
+  if (options.shouldReplace && options.staleTtlSec) {
+    const previous =
+      readMemory<T>(staleKey(key)) ?? (await readShared<T>(staleKey(key)));
+    if (previous !== null && previous !== undefined && !options.shouldReplace(fresh, previous)) {
+      return previous;
+    }
   }
 
   writeMemory(key, fresh, Math.min(ttlSec, 30));

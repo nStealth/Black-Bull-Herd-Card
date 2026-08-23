@@ -256,7 +256,22 @@ export async function loadHolderIndex(): Promise<HolderIndex | null> {
         return null;
       }
     },
-    { staleTtlSec: STALE.holders, serveStaleWhileRevalidating: true }
+    {
+      staleTtlSec: STALE.holders,
+      serveStaleWhileRevalidating: true,
+      // A complete walk always wins. Between two partial walks, keep whichever
+      // enumerated more of the supply: the walk is time-bounded, so a slow
+      // minute produces a worse index, and letting it overwrite a better one
+      // makes the dashboard quietly regress.
+      shouldReplace: (fresh, previous) => {
+        // A failed walk is never an improvement; the caller keeps the old one.
+        if (!fresh) return false;
+        if (!previous) return true;
+        if (fresh.distribution.complete) return true;
+        if (previous.distribution.complete) return false;
+        return fresh.distribution.coveragePct >= previous.distribution.coveragePct;
+      }
+    }
   );
 }
 
