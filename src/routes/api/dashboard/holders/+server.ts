@@ -48,6 +48,10 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
     };
 
     setHeaders({
+      // Read-only, cached and free of user data, so cross-origin reads are
+      // welcome: other sites and bots can surface this token's numbers.
+      'access-control-allow-origin': '*',
+
       'cache-control': 'public, max-age=120, stale-while-revalidate=600'
     });
 

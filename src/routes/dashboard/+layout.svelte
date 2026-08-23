@@ -56,15 +56,15 @@
       </div>
 
       <div class="flex items-center gap-1.5">
-        <a
-          href="/dashboard/about"
-          class="rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-[var(--d-hover)]"
-          style="color: {$page.url.pathname === '/dashboard/about'
-            ? 'var(--d-accent)'
-            : 'var(--d-text-2)'};"
-        >
-          About
-        </a>
+        {#each [{ href: '/dashboard/about', label: 'About' }, { href: '/dashboard/api', label: 'API' }] as link (link.href)}
+          <a
+            href={link.href}
+            class="rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-[var(--d-hover)]"
+            style="color: {$page.url.pathname === link.href ? 'var(--d-accent)' : 'var(--d-text-2)'};"
+          >
+            {link.label}
+          </a>
+        {/each}
         <ThemeToggle />
       </div>
     </div>

@@ -54,6 +54,36 @@
   // The holder walk can stop short of every token account, so the count is a
   // floor. Showing it bare would assert a total we did not actually reach.
   $: holderIndexPartial = snapshot.distribution?.complete === false;
+
+  const siteUrl = import.meta.env.VITE_SITE_URL || 'https://ansemherd.online';
+
+  /**
+   * Unfurl copy, rebuilt whenever the snapshot refreshes.
+   *
+   * Kept to the facts a trader scans for first — price, the 24h move, size and
+   * how many wallets hold it. No adjectives: the numbers are the pitch, and an
+   * unfurl that oversells is one nobody trusts twice.
+   */
+  $: change24h = activity?.h24.priceChangePct ?? null;
+  $: shareTitle = overview
+    ? `$${overview.symbol} ${usd(overview.priceUsd, 4)}${
+        change24h === null ? '' : ` ${change24h >= 0 ? '▲' : '▼'} ${Math.abs(change24h).toFixed(1)}% 24h`
+      } — ANSEM Analytics`
+    : 'ANSEM Analytics — Solana Token Dashboard';
+
+  $: shareDescription = overview
+    ? [
+        `Market cap ${usdCompact(overview.marketCapUsd)}`,
+        `${usdCompact(activity?.h24.volumeUsd ?? 0)} traded in 24h`,
+        `${usdCompact(overview.liquidityUsd)} liquidity across ${overview.pairs.length} pools`,
+        holdersLive
+          ? `${count(snapshot.totalHolders ?? 0)}${holderIndexPartial ? '+' : ''} holders`
+          : null,
+        'Live price history, order flow, trade depth and contract safety.'
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : 'Live on-chain analytics for ANSEM on Solana: price, liquidity, trading activity and holder rankings.';
   $: syncedLabel = now && relativeAge(lastSynced);
 
   async function refresh() {
@@ -94,11 +124,30 @@
 </script>
 
 <svelte:head>
-  <title>ANSEM Analytics — Solana Token Dashboard</title>
-  <meta
-    name="description"
-    content="Live on-chain analytics for ANSEM on Solana: price, liquidity, trading activity and holder rankings."
-  />
+  <!--
+    Live numbers in the tags themselves.
+
+    The page is server-rendered, so a crawler that never runs JavaScript still
+    receives the current price, change and holder count. Every time this link is
+    posted to X, Telegram or Discord the unfurl carries real figures instead of
+    a generic blurb, which turns each share into something worth clicking.
+  -->
+  <title>{shareTitle}</title>
+  <meta name="description" content={shareDescription} />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ANSEM Analytics" />
+  <meta property="og:title" content={shareTitle} />
+  <meta property="og:description" content={shareDescription} />
+  <meta property="og:url" content="{siteUrl}/dashboard" />
+  {#if overview?.imageUrl}
+    <meta property="og:image" content={overview.imageUrl} />
+    <meta property="twitter:image" content={overview.imageUrl} />
+  {/if}
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={shareTitle} />
+  <meta name="twitter:description" content={shareDescription} />
 </svelte:head>
 
 <CryptoBackground />
