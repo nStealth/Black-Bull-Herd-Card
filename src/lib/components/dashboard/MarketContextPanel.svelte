@@ -8,6 +8,7 @@
 
   import type { MarketStats } from '$lib/dashboard/types';
   import { pct, usd, usdCompact } from '$lib/dashboard/format';
+  import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
 
   export let market: MarketStats | null;
   export let priceUsd: number;
@@ -74,7 +75,9 @@
     class="flex items-baseline justify-between gap-3 border-b px-5 py-3.5"
     style="border-color: var(--d-border);"
   >
-    <h2 class="text-sm font-semibold" style="color: var(--d-text);">Market Context</h2>
+    <h2 class="text-sm font-semibold" style="color: var(--d-text);">Market Context
+      <InfoTip label="Market Context" text="Where this token sits against the wider market rather than just its own pools: rank by market cap, all-time high and low, and the position of the live price inside its 24-hour range." />
+    </h2>
     {#if market?.rank}
       <span class="d-numeric text-[0.6875rem]" style="color: var(--d-text-3);">
         Rank #{market.rank}

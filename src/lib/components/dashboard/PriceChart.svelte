@@ -9,6 +9,7 @@
   import { onMount } from 'svelte';
   import type { Candle, ChartRange, PriceSeries } from '$lib/dashboard/types';
   import { usd, usdCompact } from '$lib/dashboard/format';
+  import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
 
   export let initial: PriceSeries | null = null;
 
@@ -147,7 +148,9 @@
     class="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3"
     style="border-color: var(--d-border);"
   >
-    <h2 class="text-sm font-semibold" style="color: var(--d-text);">Price History</h2>
+    <h2 class="text-sm font-semibold" style="color: var(--d-text);">Price History
+      <InfoTip label="Price History" text="Open/high/low/close candles with a volume strip, taken from the deepest pool — the one hardest to move with a single trade. Hover anywhere on the chart to read the exact price and volume at that moment." />
+    </h2>
 
     <div class="flex gap-0.5" role="group" aria-label="Chart range">
       {#each RANGES as r (r.key)}

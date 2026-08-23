@@ -7,6 +7,7 @@
 
   import type { SecurityInfo } from '$lib/dashboard/types';
   import { pct, shortAddress, usdCompact } from '$lib/dashboard/format';
+  import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
 
   export let security: SecurityInfo | null;
 
@@ -116,7 +117,9 @@
     class="flex items-baseline justify-between gap-3 border-b px-5 py-3.5"
     style="border-color: var(--d-border);"
   >
-    <h2 class="text-sm font-semibold" style="color: var(--d-text);">Contract Safety</h2>
+    <h2 class="text-sm font-semibold" style="color: var(--d-text);">Contract Safety
+      <InfoTip label="Contract Safety" text="Checks read straight from the mint account on-chain. Deliberately a list of facts rather than a single score — a score invites trusting the number instead of the check. Anything we could not read says Unknown rather than defaulting to a pass." />
+    </h2>
     {#if security}
       <span class="d-numeric text-[0.6875rem]" style="color: var(--d-text-3);">
         {passed}/{measured} pass

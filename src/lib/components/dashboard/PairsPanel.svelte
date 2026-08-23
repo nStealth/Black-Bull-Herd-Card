@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PairInfo } from '$lib/dashboard/types';
   import { usdCompact } from '$lib/dashboard/format';
+  import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
 
   export let pairs: PairInfo[] = [];
 
@@ -12,7 +13,9 @@
     class="flex items-baseline justify-between border-b px-5 py-3.5"
     style="border-color: var(--d-border);"
   >
-    <h2 class="text-sm font-semibold" style="color: var(--d-text);">Liquidity by Pool</h2>
+    <h2 class="text-sm font-semibold" style="color: var(--d-text);">Liquidity by Pool
+      <InfoTip label="Liquidity by Pool" text="Every venue this token trades on and how deep each one is. Liquidity concentrated in a single pool behaves very differently from the same total spread across many — one pool is far easier to drain or move." />
+    </h2>
     <span class="d-numeric text-[0.6875rem]" style="color: var(--d-text-3);">
       {pairs.length} pools · {usdCompact(total)}
     </span>

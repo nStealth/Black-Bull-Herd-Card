@@ -77,6 +77,14 @@ export interface Distribution {
   /** Gini coefficient over indexed holders: 0 = perfectly even, 1 = fully concentrated. */
   gini: number;
   tierCounts: { tierId: string; count: number; supplyPct: number }[];
+  /** True when the token-account walk reached the end rather than the page cap. */
+  complete: boolean;
+  /** Share of total supply held by the accounts actually enumerated. */
+  coveragePct: number;
+  /** Rows kept for the leaderboard (capped). */
+  rankedCount: number;
+  /** Unique owners found across the whole walk. */
+  ownerCount: number;
 }
 
 /** One OHLCV bar. Short keys — a 500-bar series crosses the wire on every load. */

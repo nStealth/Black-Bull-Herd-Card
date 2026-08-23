@@ -8,6 +8,7 @@
   import { onDestroy, onMount } from 'svelte';
   import type { TradeEvent } from '$lib/dashboard/types';
   import { compact, relativeAge, shortAddress, usd, usdCompact } from '$lib/dashboard/format';
+  import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
 
   export let initial: TradeEvent[] = [];
 
@@ -66,6 +67,7 @@
     <h2 class="flex items-center gap-2 text-sm font-semibold" style="color: var(--d-text);">
       Live Tape
       <span class="h-1.5 w-1.5 animate-pulse rounded-full" style="background: var(--d-accent);" aria-hidden="true" />
+      <InfoTip label="Live Tape" text="Individual swaps above $250 as they land, newest first, refreshing every 20 seconds. Aggregates hide who is actually moving; every row links to Solscan so you can verify the trade yourself." />
     </h2>
 
     <div class="flex gap-0.5" role="group" aria-label="Filter trades">

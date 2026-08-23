@@ -1,0 +1,184 @@
+<script lang="ts">
+  // Small "!" affordance next to a panel title that explains what the panel is.
+  //
+  // The bubble is position:fixed rather than absolute. Every panel card is
+  // `overflow-hidden`, so an absolutely-positioned popover would be clipped by
+  // its own card; fixed coordinates are measured from the button instead, which
+  // escapes the clip and lets the bubble flip when it would run off-screen.
+
+  import { onDestroy } from 'svelte';
+
+  export let text: string;
+  /** Accessible name, so screen readers hear which panel this explains. */
+  export let label: string;
+
+  const WIDTH = 260;
+  const GAP = 10;
+  const MARGIN = 12;
+
+  let open = false;
+  let trigger: HTMLButtonElement;
+  let x = 0;
+  let y = 0;
+  let above = false;
+  let closeTimer: ReturnType<typeof setTimeout>;
+
+  function place() {
+    if (!trigger) return;
+    const r = trigger.getBoundingClientRect();
+
+    // Flip above the trigger when there is not enough room below.
+    const estimatedHeight = 120;
+    above = r.bottom + GAP + estimatedHeight > window.innerHeight;
+    y = above ? r.top - GAP : r.bottom + GAP;
+
+    // Centre on the trigger, then pull back inside the viewport at both edges.
+    const ideal = r.left + r.width / 2 - WIDTH / 2;
+    x = Math.min(Math.max(ideal, MARGIN), window.innerWidth - WIDTH - MARGIN);
+  }
+
+  function show() {
+    clearTimeout(closeTimer);
+    place();
+    open = true;
+  }
+
+  /** Small delay so moving the pointer between button and bubble does not close it. */
+  function scheduleHide() {
+    clearTimeout(closeTimer);
+    closeTimer = setTimeout(() => (open = false), 120);
+  }
+
+  function hideNow() {
+    clearTimeout(closeTimer);
+    open = false;
+  }
+
+  function toggle() {
+    if (open) hideNow();
+    else show();
+  }
+
+  function onKey(event: KeyboardEvent) {
+    if (event.key === 'Escape') hideNow();
+  }
+
+  onDestroy(() => clearTimeout(closeTimer));
+</script>
+
+<svelte:window on:scroll={hideNow} on:resize={hideNow} />
+<svelte:document on:keydown={onKey} />
+
+<button
+  bind:this={trigger}
+  type="button"
+  class="info-trigger"
+  class:is-open={open}
+  aria-label="About {label}"
+  aria-expanded={open}
+  on:click|stopPropagation={toggle}
+  on:mouseenter={show}
+  on:mouseleave={scheduleHide}
+  on:focus={show}
+  on:blur={scheduleHide}
+>
+  !
+</button>
+
+{#if open}
+  <div
+    class="info-bubble"
+    class:above
+    role="tooltip"
+    style="left: {x}px; top: {y}px; width: {WIDTH}px;"
+    on:mouseenter={show}
+    on:mouseleave={scheduleHide}
+  >
+    {text}
+  </div>
+{/if}
+
+<style>
+  .info-trigger {
+    display: inline-grid;
+    place-items: center;
+    width: 15px;
+    height: 15px;
+    margin-left: 6px;
+    border-radius: 9999px;
+    border: 1px solid var(--d-border-strong);
+    background: transparent;
+    color: var(--d-text-3);
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: help;
+    vertical-align: middle;
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease,
+      background 0.15s ease;
+  }
+
+  .info-trigger:hover,
+  .info-trigger:focus-visible,
+  .info-trigger.is-open {
+    color: var(--d-accent);
+    border-color: var(--d-accent);
+    background: var(--d-accent-soft);
+    outline: none;
+  }
+
+  .info-bubble {
+    position: fixed;
+    z-index: 80;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--d-border);
+    background: var(--d-surface);
+    color: var(--d-text-2);
+    box-shadow: var(--d-shadow-lg);
+    font-size: 0.6875rem;
+    line-height: 1.55;
+    text-align: left;
+    font-weight: 400;
+    animation: tipIn 0.14s ease-out;
+  }
+
+  /* When flipped, `top` is the trigger's top edge, so sit the bubble above it. */
+  .info-bubble.above {
+    transform: translateY(-100%);
+  }
+
+  @keyframes tipIn {
+    from {
+      opacity: 0;
+      transform: translateY(-3px);
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .info-bubble.above {
+    animation: tipInAbove 0.14s ease-out;
+  }
+
+  @keyframes tipInAbove {
+    from {
+      opacity: 0;
+      transform: translateY(calc(-100% + 3px));
+    }
+    to {
+      opacity: 1;
+      transform: translateY(-100%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .info-bubble,
+    .info-bubble.above {
+      animation: none;
+    }
+  }
+</style>

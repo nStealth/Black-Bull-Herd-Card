@@ -14,7 +14,29 @@ import type { Distribution, Holder } from '$lib/dashboard/types';
 import { heliusKey, rpcCall } from './rpc';
 
 const DAS_PAGE_SIZE = 1000;
+/** Ranked rows kept for display. Enumeration itself is not capped by this. */
 const MAX_HOLDERS = 10_000;
+/**
+ * Hard ceiling on enumeration, as a safety valve rather than a target.
+ *
+ * This used to be `ceil(MAX_HOLDERS / DAS_PAGE_SIZE) + 2` — twelve pages —
+ * which quietly truncated the walk. DAS returns token accounts in arbitrary
+ * order, not by balance, so stopping early does not mean "we have the biggest
+ * holders": it means we have an arbitrary subset. On this mint that left 36% of
+ * supply in accounts nobody ever fetched, and any wallet in that 36% was
+ * invisible to the leaderboard no matter how large.
+ */
+const MAX_PAGES = 60;
+/**
+ * Wall-clock budget for the walk.
+ *
+ * Page count alone does not bound how long this takes — sixty sequential RPC
+ * round-trips can outlast the serverless invocation that started them, and a
+ * timeout there costs the whole dashboard load, not just this panel. Stopping
+ * on elapsed time keeps the page responsive and simply reports the result as
+ * partial, which the panel already knows how to say out loud.
+ */
+const WALK_BUDGET_MS = 20_000;
 
 export function holdersAvailable(): boolean {
   return heliusKey() !== null;
@@ -49,12 +71,15 @@ interface DasTokenAccount {
 async function fetchOwnerBalances(
   mint: string,
   decimals: number
-): Promise<Map<string, number>> {
+): Promise<{ balances: Map<string, number>; complete: boolean }> {
   const balances = new Map<string, number>();
-  const maxPages = Math.ceil(MAX_HOLDERS / DAS_PAGE_SIZE) + 2;
   const scale = 10 ** decimals;
+  const deadline = Date.now() + WALK_BUDGET_MS;
+  let complete = false;
 
-  for (let page = 1; page <= maxPages; page++) {
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    if (Date.now() > deadline) break;
+
     const result = await rpcCall<{ token_accounts?: DasTokenAccount[] }>('getTokenAccounts', {
       mint,
       page,
@@ -63,7 +88,10 @@ async function fetchOwnerBalances(
     });
 
     const accounts = result.token_accounts ?? [];
-    if (accounts.length === 0) break;
+    if (accounts.length === 0) {
+      complete = true;
+      break;
+    }
 
     for (const account of accounts) {
       const raw = typeof account.amount === 'string' ? Number(account.amount) : account.amount;
@@ -71,10 +99,14 @@ async function fetchOwnerBalances(
       balances.set(account.owner, (balances.get(account.owner) ?? 0) + raw / scale);
     }
 
-    if (accounts.length < DAS_PAGE_SIZE) break;
+    // A short page is the only reliable signal that the walk is exhausted.
+    if (accounts.length < DAS_PAGE_SIZE) {
+      complete = true;
+      break;
+    }
   }
 
-  return balances;
+  return { balances, complete };
 }
 
 function tierFor(balance: number): string {
@@ -100,7 +132,8 @@ export async function indexHolders(
 ): Promise<HolderIndex | null> {
   if (!holdersAvailable()) return null;
 
-  const balances = await fetchOwnerBalances(mint, decimals);
+  const { balances, complete } = await fetchOwnerBalances(mint, decimals);
+  const indexedSupply = [...balances.values()].reduce((sum, b) => sum + b, 0);
   const ranked = [...balances.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, MAX_HOLDERS)
@@ -116,7 +149,12 @@ export async function indexHolders(
   return {
     holders: ranked,
     totalHolders: balances.size,
-    distribution: buildDistribution(ranked, totalSupply)
+    distribution: buildDistribution(ranked, totalSupply, {
+      complete,
+      coveragePct: totalSupply > 0 ? (indexedSupply / totalSupply) * 100 : 0,
+      rankedCount: ranked.length,
+      ownerCount: balances.size
+    })
   };
 }
 
@@ -144,7 +182,18 @@ function gini(holders: Holder[]): number {
   return (2 * weighted) / (n * total) - (n + 1) / n;
 }
 
-function buildDistribution(holders: Holder[], totalSupply: number): Distribution {
+interface Coverage {
+  complete: boolean;
+  coveragePct: number;
+  rankedCount: number;
+  ownerCount: number;
+}
+
+function buildDistribution(
+  holders: Holder[],
+  totalSupply: number,
+  coverage: Coverage
+): Distribution {
   const tierCounts = TIERS.map((tier) => {
     const members = holders.filter((h) => h.tierId === tier.id);
     const supply = members.reduce((sum, h) => sum + h.balance, 0);
@@ -160,6 +209,7 @@ function buildDistribution(holders: Holder[], totalSupply: number): Distribution
     top50Pct: sumPct(holders, 50),
     top100Pct: sumPct(holders, 100),
     gini: gini(holders),
-    tierCounts
+    tierCounts,
+    ...coverage
   };
 }

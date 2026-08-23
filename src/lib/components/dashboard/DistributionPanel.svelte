@@ -2,6 +2,7 @@
   import type { Distribution } from '$lib/dashboard/types';
   import { TIERS } from '$lib/tiers';
   import { count, pct } from '$lib/dashboard/format';
+  import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
 
   export let distribution: Distribution | null;
 
@@ -29,11 +30,24 @@
     : [];
 
   $: maxCount = Math.max(1, ...tiers.map((t) => t.count));
+
+  /**
+   * Percentages are only meaningful next to how much of the supply was actually
+   * enumerated. If the walk hit its page cap, the shares below describe a
+   * subset, and saying so is the difference between a figure and a guess.
+   */
+  $: coverage = distribution?.coveragePct ?? 0;
+  $: capped = distribution ? !distribution.complete : false;
+  $: rankedShown = distribution
+    ? distribution.rankedCount < distribution.ownerCount
+    : false;
 </script>
 
 <section class="d-card overflow-hidden">
   <header class="border-b px-5 py-3.5" style="border-color: var(--d-border);">
-    <h2 class="text-sm font-semibold" style="color: var(--d-text);">Supply Distribution</h2>
+    <h2 class="text-sm font-semibold" style="color: var(--d-text);">Supply Distribution
+      <InfoTip label="Supply Distribution" text="How tightly the supply is held. Top 10/50/100 are shares of total supply; the Gini coefficient runs 0 (everyone holds the same) to 1 (one wallet holds everything). Tier counts cover the ranked wallets only." />
+    </h2>
   </header>
 
   {#if distribution}
@@ -72,7 +86,14 @@
     </div>
 
     <div class="border-t px-5 py-4" style="border-color: var(--d-border);">
-      <p class="d-label mb-3">Holders by tier</p>
+      <p class="d-label mb-3">
+        Holders by tier
+        {#if rankedShown && distribution}
+          <span class="font-normal normal-case tracking-normal" style="color: var(--d-text-3);">
+            · top {count(distribution.rankedCount)} of {count(distribution.ownerCount)}
+          </span>
+        {/if}
+      </p>
       {#each tiers as row (row.tierId)}
         <div class="mb-2.5 flex items-center gap-3 last:mb-0">
           <span class="w-28 shrink-0 truncate text-xs" style="color: var(--d-text-2);">
@@ -90,6 +111,17 @@
         </div>
       {/each}
     </div>
+    <p
+      class="border-t px-5 py-2.5 text-[0.625rem] leading-relaxed"
+      style="border-color: var(--d-border); color: {capped ? 'var(--d-down)' : 'var(--d-text-3)'};"
+    >
+      {#if capped}
+        Partial index — the token-account walk hit its page limit, so these shares cover only
+        {pct(coverage, 1)} of supply. Treat them as a floor, not a total.
+      {:else}
+        Covers {pct(coverage, 1)} of supply across {count(distribution.ownerCount)} holders.
+      {/if}
+    </p>
   {:else}
     <p class="px-5 py-10 text-center text-[0.8125rem]" style="color: var(--d-text-3);">
       Unlocks with the holder index.
