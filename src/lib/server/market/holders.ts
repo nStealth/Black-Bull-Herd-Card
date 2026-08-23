@@ -26,7 +26,7 @@ const MAX_HOLDERS = 10_000;
  * supply in accounts nobody ever fetched, and any wallet in that 36% was
  * invisible to the leaderboard no matter how large.
  */
-const MAX_PAGES = 60;
+const MAX_PAGES = 150;
 /**
  * Wall-clock budget for the walk.
  *

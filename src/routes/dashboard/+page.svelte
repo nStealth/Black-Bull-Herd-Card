@@ -43,6 +43,9 @@
   $: marketStats = snapshot.market;
   $: depth = snapshot.depth;
   $: risk = snapshot.risk;
+  // The holder walk can stop short of every token account, so the count is a
+  // floor. Showing it bare would assert a total we did not actually reach.
+  $: holderIndexPartial = snapshot.distribution?.complete === false;
   $: syncedLabel = now && relativeAge(lastSynced);
 
   async function refresh() {
@@ -176,8 +179,14 @@
       />
       <StatTile
         label="Holders"
-        value={holdersLive ? count(snapshot.totalHolders ?? 0) : '—'}
-        hint={holdersLive ? 'unique wallets' : 'indexer not configured'}
+        value={holdersLive
+          ? `${count(snapshot.totalHolders ?? 0)}${holderIndexPartial ? '+' : ''}`
+          : '—'}
+        hint={holdersLive
+          ? holderIndexPartial
+            ? 'indexed so far'
+            : 'unique wallets'
+          : 'indexer not configured'}
         muted={!holdersLive}
       />
       <StatTile label="Total Supply" value={compact(overview.totalSupply)} hint={overview.symbol} />
