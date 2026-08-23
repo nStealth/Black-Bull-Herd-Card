@@ -23,10 +23,22 @@ export const GET: RequestHandler = async ({ params, request, setHeaders }) => {
   }
 
   const limit = await rateLimit(`rank:${clientKey(request)}`, LIMIT_PER_MIN, 60);
+  // The counter headers go on the 429 too. Sending them only on success meant
+  // the one response a client most needs them on — the rejection — arrived
+  // without them.
+  const limitHeaders = {
+    'x-ratelimit-limit': String(LIMIT_PER_MIN),
+    'x-ratelimit-remaining': String(limit.remaining),
+    'x-ratelimit-state': limit.state
+  };
+
   if (!limit.allowed) {
     return json(
       { error: 'Too many requests', retryAfterSec: limit.retryAfterSec },
-      { status: 429, headers: { 'retry-after': String(limit.retryAfterSec) } }
+      {
+        status: 429,
+        headers: { ...limitHeaders, 'retry-after': String(limit.retryAfterSec) }
+      }
     );
   }
 
@@ -53,14 +65,9 @@ export const GET: RequestHandler = async ({ params, request, setHeaders }) => {
       }
     }
 
-    setHeaders({
-      'cache-control': 'private, max-age=30',
-      // Observable on purpose: a limiter that fails open is indistinguishable
-      // from one that is working until you can see the counter.
-      'x-ratelimit-limit': String(LIMIT_PER_MIN),
-      'x-ratelimit-remaining': String(limit.remaining),
-      'x-ratelimit-state': limit.state
-    });
+    // Observable on purpose: a limiter that fails open is indistinguishable
+    // from one that is working until you can see the counter.
+    setHeaders({ 'cache-control': 'private, max-age=30', ...limitHeaders });
     return json(result);
   } catch (error) {
     console.error('Wallet rank failed:', error);

@@ -11,6 +11,7 @@ import { getPriceSeries, getRecentTrades, getTokenMeta, type TokenMeta } from '.
 import { getSupply, holdersAvailable, indexHolders, type HolderIndex } from './holders';
 import { getDepthLadder } from './jupiter';
 import { getSolBenchmark } from './benchmark';
+import { buildPulse, buildRhythm } from './pulse';
 import { buildWalletRank } from './rank';
 import { buildRiskProfile } from './risk';
 import { isRedisReady } from '$lib/server/redis';
@@ -18,6 +19,8 @@ import { getMintAuthorities } from './security';
 import type {
   ActivityStats,
   Benchmark,
+  MarketPulse,
+  TradingRhythm,
   WalletRank,
   DepthLadder,
   RiskProfile,
@@ -371,6 +374,10 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
   // the 'all' series is already cached for the chart's ALL range.
   const risk: RiskProfile | null = seriesAll ? buildRiskProfile(seriesAll.candles) : null;
 
+  // The 7d series is hourly, which is exactly the granularity a 24-hour
+  // profile needs; both of these reuse series already fetched above.
+  const rhythm: TradingRhythm | null = series7d ? buildRhythm(series7d.candles) : null;
+
   const notes: string[] = [];
   if (!market) {
     notes.push('DexScreener is not responding — price and volume are stale.');
@@ -409,6 +416,14 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
         volume7dUsd: series7d?.volumeUsd ?? null,
         volume30dUsd: series30d?.volumeUsd ?? null
       }
+    : null;
+
+  const pulse: MarketPulse | null = market
+    ? buildPulse(
+        { ...market.activity, d7: null, d30: null },
+        market.overview.liquidityUsd,
+        market.overview.marketCapUsd
+      )
     : null;
 
   const status: ProviderStatus = {
@@ -452,6 +467,8 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     depth,
     risk,
     benchmark,
+    pulse,
+    rhythm,
     status,
     updatedAt: Date.now()
   };
@@ -462,6 +479,8 @@ export type {
   ActivityStats,
   Benchmark,
   Candle,
+  MarketPulse,
+  TradingRhythm,
   WalletRank,
   DepthLadder,
   RiskProfile,

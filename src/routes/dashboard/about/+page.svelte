@@ -33,6 +33,16 @@
       why: 'Aggregates hide who is actually moving. Every row links to Solscan so you can verify a print.'
     },
     {
+      name: 'Market Pulse',
+      what: 'This hour\u2019s volume against the token\u2019s own 24-hour average, how buy pressure has drifted across 1H/6H/24H, and daily turnover of both liquidity and market cap.',
+      why: 'Absolute volume is unreadable without a baseline. Every figure is a ratio against the token itself, so it stays meaningful whatever the market cap does.'
+    },
+    {
+      name: 'Trading Rhythm',
+      what: 'Average volume by hour of day, folded from a week of hourly candles, in UTC and your own timezone.',
+      why: 'Slippage is not constant through the day. The busiest hours are the ones where a large order is least likely to move the price \u2014 useful if you are choosing when to trade.'
+    },
+    {
       name: 'If You Had Bought',
       what: 'Pick a date and an amount to see what that position would be worth today, in tokens, dollars and multiple.',
       why: 'Priced off real daily closes, never a projection. The launch entry is the bonding curve\u2019s opening day \u2014 a price almost nobody actually got \u2014 and is labelled as such rather than presented as a realistic entry.'

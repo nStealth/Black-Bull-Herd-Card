@@ -23,6 +23,8 @@
   import WalletRankPanel from '$lib/components/dashboard/WalletRankPanel.svelte';
   import BuyBackPanel from '$lib/components/dashboard/BuyBackPanel.svelte';
   import BenchmarkPanel from '$lib/components/dashboard/BenchmarkPanel.svelte';
+  import PulsePanel from '$lib/components/dashboard/PulsePanel.svelte';
+  import RhythmPanel from '$lib/components/dashboard/RhythmPanel.svelte';
 
   export let data: PageData;
 
@@ -47,6 +49,8 @@
   $: depth = snapshot.depth;
   $: risk = snapshot.risk;
   $: benchmark = snapshot.benchmark;
+  $: pulse = snapshot.pulse;
+  $: rhythm = snapshot.rhythm;
   // The holder walk can stop short of every token account, so the count is a
   // floor. Showing it bare would assert a total we did not actually reach.
   $: holderIndexPartial = snapshot.distribution?.complete === false;
@@ -218,6 +222,12 @@
     <!-- Price history -->
     <div class="mb-4">
       <PriceChart initial={data.chart} />
+    </div>
+
+    <!-- Right now: how hard it is trading, and when it usually does -->
+    <div class="mb-4 grid grid-cols-2 gap-3 max-lg:grid-cols-1">
+      <PulsePanel {pulse} />
+      <RhythmPanel {rhythm} />
     </div>
 
     <!-- Activity, liquidity, distribution -->

@@ -220,6 +220,33 @@ export interface Benchmark {
   change30dPct: number | null;
 }
 
+/** How hard the token is trading right now, relative to its own baseline. */
+export interface MarketPulse {
+  /** Current hour's volume divided by the 24h average hour. 1 = normal. */
+  volumePace: number | null;
+  hourVolumeUsd: number;
+  dayVolumeUsd: number;
+  buyShareNow: number | null;
+  buyShare6h: number | null;
+  buyShareDay: number | null;
+  /** Percentage points the buy share has moved versus the 24h figure. */
+  buyShareShift: number | null;
+  /** 24h volume as a multiple of pooled liquidity. */
+  liquidityTurnover: number | null;
+  /** 24h volume as a fraction of market cap. */
+  marketCapTurnover: number | null;
+}
+
+/** Average volume per UTC hour, folded from a week of hourly candles. */
+export interface TradingRhythm {
+  /** 24 entries, index = UTC hour. */
+  hours: number[];
+  peakHourUtc: number;
+  quietHourUtc: number;
+  peakVolumeUsd: number;
+  daysCovered: number;
+}
+
 export interface ProviderStatus {
   dexscreener: Availability;
   holders: Availability;
@@ -251,6 +278,8 @@ export interface DashboardSnapshot {
   depth: DepthLadder | null;
   risk: RiskProfile | null;
   benchmark: Benchmark | null;
+  pulse: MarketPulse | null;
+  rhythm: TradingRhythm | null;
   status: ProviderStatus;
   updatedAt: number;
 }
