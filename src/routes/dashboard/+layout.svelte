@@ -11,6 +11,28 @@
   import SocialGlyph from '$lib/components/ui/SocialGlyph.svelte';
   import { OFFICIAL_LINKS, CREATOR_LINKS } from '$lib/social';
 
+  const SITE = 'https://ansemherd.online';
+
+  /**
+   * Structured data for the dashboard branch.
+   *
+   * Search engines will happily invent a description from whatever text they
+   * scrape first; naming the application and its purpose explicitly is how the
+   * result page ends up saying what this actually is.
+   */
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'ANSEM Analytics',
+    url: `${SITE}/dashboard`,
+    applicationCategory: 'FinanceApplication',
+    operatingSystem: 'Any',
+    description:
+      'Live on-chain analytics for the Solana token $ANSEM: price history, order flow, trade depth at size, holder distribution and contract safety.',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    isAccessibleForFree: true
+  };
+
   const donateAddress =
     import.meta.env.VITE_DONATION_ADDRESS || '2EqZkzFGoPkZhymX9FpBqaEMN6YmzyNe85x9ygQ3atGs';
 
@@ -29,6 +51,11 @@
   onMount(() => applyTheme($theme));
   onDestroy(clearTheme);
 </script>
+
+<svelte:head>
+  <link rel="canonical" href="{SITE}{$page.url.pathname}" />
+  {@html `<script type="application/ld+json">${JSON.stringify(structuredData)}<\/script>`}
+</svelte:head>
 
 <div class="flex min-h-screen flex-col" style="background: var(--d-bg);">
   <header

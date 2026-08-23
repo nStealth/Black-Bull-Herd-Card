@@ -2,11 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%sveltekit.assets%/favicon.png" type="image/png" />
+    <!--
+      SVG first: it is 565 bytes and every current browser prefers it. The PNG
+      that used to lead here was a 1024px, 1.6 MB image — thirty-six times the
+      weight of the entire compressed page, downloaded on every first visit.
+    -->
     <link rel="icon" href="%sveltekit.assets%/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="%sveltekit.assets%/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0a0a0f" />
     <meta name="description" content="Black Bull Herd Card 🐂🀄️ - Claim your exclusive NFT as an $ANSEM holder" />
+
+    <!-- Warm the connections the dashboard's data layer needs before it asks. -->
+    <link rel="preconnect" href="https://api.dexscreener.com" />
+    <link rel="dns-prefetch" href="https://api.geckoterminal.com" />
     <script>
       // Paint the dashboard theme before first render so light mode never flashes dark.
       (function () {

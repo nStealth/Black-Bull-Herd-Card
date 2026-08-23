@@ -1,0 +1,46 @@
+# ANSEM Analytics
+
+> A live, read-only analytics dashboard for the Solana token $ANSEM
+> (mint 9cRCn9rGT8V2imeM2BaKs13yhMEais3ruM3rPvTGpump). Price, order flow,
+> trade depth, holder distribution and contract safety, refreshed
+> continuously and free to read.
+
+Everything published here is measured. Nothing is forecast, scored or rated.
+Where a figure could not be measured it is reported as unknown rather than
+estimated, and where a data source is partial the page says so and states the
+coverage it actually reached.
+
+## Pages
+
+- [Dashboard](https://ansemherd.online/dashboard): Live price, market pulse,
+  trading rhythm, order flow by wallet, trade depth at size, risk profile,
+  contract safety, holder rankings and supply distribution.
+- [Documentation](https://ansemherd.online/dashboard/docs): How to read each
+  panel, a glossary of the terms used, and the point at which each figure
+  stops being reliable.
+- [About](https://ansemherd.online/dashboard/about): What the dashboard
+  tracks and why each panel is measured the way it is.
+- [API](https://ansemherd.online/dashboard/api): Free read-only JSON
+  endpoints, no key required, CORS enabled.
+- [Campaign](https://ansemherd.online/): The Black Bull Herd Card NFT
+  campaign, which closed on 17 August 2026.
+
+## API
+
+- `GET /api/dashboard/snapshot`: Everything on the dashboard in one payload.
+- `GET /api/dashboard/chart?range=1h|24h|7d|30d|all`: OHLCV candles.
+- `GET /api/dashboard/trades`: Recent swaps above $250.
+- `GET /api/dashboard/holders?page=1&pageSize=50`: Ranked holder list.
+- `GET /api/dashboard/rank/{wallet}`: One wallet's position among all holders.
+
+## Data sources
+
+DexScreener for price, liquidity and 24h trade counts; GeckoTerminal for
+candles and the trade tape; Jupiter for executable slippage quotes; CoinGecko
+for rank and all-time high/low; Solana mainnet for supply and mint
+authorities; Helius DAS for the holder index.
+
+## Notes
+
+This is a community project. It is not affiliated with the $ANSEM team and
+nothing on it is financial advice.

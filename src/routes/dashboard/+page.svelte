@@ -62,30 +62,48 @@
   /**
    * Unfurl copy, rebuilt whenever the snapshot refreshes.
    *
-   * Kept to the facts a trader scans for first — price, the 24h move, size and
-   * how many wallets hold it. No adjectives: the numbers are the pitch, and an
-   * unfurl that oversells is one nobody trusts twice.
+   * Leads with the live price and the day's move, because that is the line
+   * somebody scrolling a timeline actually stops on. Then the figures that are
+   * hardest to find elsewhere, and finally what the page will do for them.
+   *
+   * Still no adjectives. Every number here is one a visitor can verify on the
+   * page within a second of arriving, and an unfurl that oversells is one
+   * nobody trusts twice.
    */
   $: change24h = activity?.h24.priceChangePct ?? null;
   $: shareTitle = overview
     ? `$${overview.symbol} ${usd(overview.priceUsd, 4)}${
         change24h === null ? '' : ` ${change24h >= 0 ? '▲' : '▼'} ${Math.abs(change24h).toFixed(1)}% 24h`
-      } — ANSEM Analytics`
-    : 'ANSEM Analytics — Solana Token Dashboard';
+      } · Live ANSEM Analytics`
+    : 'ANSEM Analytics — Live Solana Token Dashboard';
+
+  /**
+   * The single most arresting true figure available, used as the hook.
+   *
+   * What a million-dollar exit costs is the number nobody else publishes for
+   * this token, so it leads when the router has quoted it; volatility is the
+   * fallback when it has not.
+   */
+  $: headlineHook = (() => {
+    const million = snapshot.depth?.sells.find((s) => s.usd === 1_000_000 && s.impactPct !== null);
+    if (million) return `$1M exit costs ${million.impactPct?.toFixed(1)}% slippage`;
+    if (snapshot.risk) return `${snapshot.risk.volatilityPct.toFixed(0)}% annualised volatility`;
+    return null;
+  })();
 
   $: shareDescription = overview
     ? [
-        `Market cap ${usdCompact(overview.marketCapUsd)}`,
-        `${usdCompact(activity?.h24.volumeUsd ?? 0)} traded in 24h`,
-        `${usdCompact(overview.liquidityUsd)} liquidity across ${overview.pairs.length} pools`,
+        `${usdCompact(overview.marketCapUsd)} cap`,
+        `${usdCompact(activity?.h24.volumeUsd ?? 0)} 24h volume`,
         holdersLive
           ? `${count(snapshot.totalHolders ?? 0)}${holderIndexPartial ? '+' : ''} holders`
           : null,
-        'Live price history, order flow, trade depth and contract safety.'
+        headlineHook,
+        'Order flow by wallet, trade depth at size, contract safety — free, no wallet needed.'
       ]
         .filter(Boolean)
         .join(' · ')
-    : 'Live on-chain analytics for ANSEM on Solana: price, liquidity, trading activity and holder rankings.';
+    : 'Live on-chain analytics for $ANSEM on Solana: price history, order flow, trade depth and contract safety. Free, no wallet needed.';
   $: syncedLabel = now && relativeAge(lastSynced);
 
   async function refresh() {

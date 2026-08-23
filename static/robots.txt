@@ -1,4 +1,11 @@
+# ansemherd.online — live analytics for $ANSEM on Solana
+
 User-agent: *
 Allow: /
 
-Sitemap: https://blackbullherd.com/sitemap.xml
+# The API is open and documented at /dashboard/api, but crawling it wastes
+# everyone's time: every route is cached and returns numbers that change by
+# the second. Read the pages instead.
+Disallow: /api/
+
+Sitemap: https://ansemherd.online/sitemap.xml
