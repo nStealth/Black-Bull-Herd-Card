@@ -18,6 +18,7 @@
   import TradeFeed from '$lib/components/dashboard/TradeFeed.svelte';
   import SecurityPanel from '$lib/components/dashboard/SecurityPanel.svelte';
   import MarketContextPanel from '$lib/components/dashboard/MarketContextPanel.svelte';
+  import XWallPanel from '$lib/components/dashboard/XWallPanel.svelte';
 
   export let data: PageData;
 
@@ -242,4 +243,11 @@
       last good payload is shown rather than a blank panel; the header stamp says how old it is.
     </p>
   {/if}
+
+  <!-- Social: live X timelines for the accounts that move this token.
+       Outside the market-data branch on purpose — the timelines have nothing to
+       do with DexScreener, so a dead price feed must not take them down too. -->
+  <div class="mt-4">
+    <XWallPanel />
+  </div>
 </div>

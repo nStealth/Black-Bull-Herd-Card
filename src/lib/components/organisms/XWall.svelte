@@ -1,246 +1,62 @@
 <script lang="ts">
-  // Live X wall for the two project accounts.
+  // Live X wall for the two project accounts, in marketing-site styling.
   //
-  // Why the official embed rather than our own renderer: X removed free read
-  // access to timelines, and the syndication endpoints that used to back
-  // third-party widgets now return empty bodies. The embed is the only route
-  // that shows real posts without a paid key, so the wall renders genuine
-  // content instead of a mock-up.
-  //
-  // Ranking and keyword filtering are not possible client-side for the same
-  // reason — engagement counts are not exposed. Rather than fake them, the
-  // filter chips hand the query to X's own search, which does rank and filter
-  // for real. `min_faves:` / `since:` / `from:` are standard search operators.
+  // The embed plumbing and the search-query building live in $lib/x so this and
+  // the dashboard panel cannot drift apart. See $lib/x/embed.ts for why the
+  // official embed is the only option and why loading is done the way it is.
 
-  import { onMount } from 'svelte';
-
-  interface Account {
-    handle: string;
-    name: string;
-    blurb: string;
-    badge: string;
-    accent: string;
-  }
-
-  const ACCOUNTS: Account[] = [
-    {
-      handle: 'blackbullsol',
-      name: 'Black Bull',
-      blurb: 'Official $ANSEM project account',
-      badge: '🐂',
-      accent: '#f59e0b'
-    },
-    {
-      handle: 'blknoiz06',
-      name: 'Ansem',
-      blurb: 'The man himself',
-      badge: '👑',
-      accent: '#ffd700'
-    }
-  ];
+  import { onDestroy, onMount } from 'svelte';
+  import { mountTimeline, whenNearViewport } from '$lib/x/embed';
+  import { X_ACCOUNTS, TIME_WINDOWS, buildFilters } from '$lib/x/accounts';
 
   const TIMELINE_HEIGHT = 620;
-  /**
-   * How long to wait for X's embed to report itself ready.
-   *
-   * createTimeline() resolves only once the cross-origin iframe posts its size
-   * back. If that message never arrives — a blocked network, a privacy
-   * extension, a throttled background tab — the promise simply never settles,
-   * and without this the card would spin forever. Falling back to a plain link
-   * is the honest outcome.
-   */
-  const READY_TIMEOUT_MS = 12_000;
 
-  let active = ACCOUNTS[0].handle;
-  /** Handles whose timeline has already been mounted, so switching is instant. */
-  const mounted = new Set<string>();
-  let containers: Record<string, HTMLDivElement | null> = {};
-  let state: Record<string, 'idle' | 'loading' | 'ready' | 'failed'> = {
-    blackbullsol: 'idle',
-    blknoiz06: 'idle'
-  };
-  let visible = false;
   let section: HTMLElement;
-
-  /** Days back for each quick filter, and the label shown on the chip. */
-  const WINDOWS = [
-    { key: '1', label: '24h', days: 1 },
-    { key: '7', label: '7 days', days: 7 },
-    { key: '30', label: '30 days', days: 30 },
-    { key: 'all', label: 'All time', days: 0 }
-  ];
-
+  let containers: Record<string, HTMLDivElement | null> = {};
+  let active = X_ACCOUNTS[0].handle;
   let windowDays = 7;
+  let visible = false;
+  let state: Record<string, 'idle' | 'loading' | 'ready' | 'failed'> = {};
+  /** Handles already rendered, so switching tabs does not re-fetch. */
+  const rendered = new Set<string>();
 
-  function since(days: number): string {
-    if (days <= 0) return '';
-    const d = new Date(Date.now() - days * 86_400_000);
-    return ` since:${d.toISOString().slice(0, 10)}`;
-  }
+  $: filters = buildFilters(active, windowDays);
+  $: activeAccount = X_ACCOUNTS.find((a) => a.handle === active) ?? X_ACCOUNTS[0];
 
-  /** Build a real X search URL. `sort` picks X's Top vs Latest tab. */
-  function searchUrl(query: string, sort: 'top' | 'live' = 'top'): string {
-    return `https://x.com/search?q=${encodeURIComponent(query)}&f=${sort}`;
-  }
-
-  $: filters = [
-    {
-      key: 'top',
-      label: 'Most liked',
-      hint: 'X ranks by engagement',
-      url: searchUrl(`(from:${active}) min_faves:100${since(windowDays)}`, 'top')
-    },
-    {
-      key: 'retweets',
-      label: 'Most reposted',
-      hint: '50+ reposts',
-      url: searchUrl(`(from:${active}) min_retweets:50${since(windowDays)}`, 'top')
-    },
-    {
-      key: 'ansem',
-      label: 'Mentions “ansem”',
-      hint: 'keyword match',
-      url: searchUrl(`(from:${active}) ansem${since(windowDays)}`, 'top')
-    },
-    {
-      key: 'media',
-      label: 'Charts & media',
-      hint: 'images and video',
-      url: searchUrl(`(from:${active}) filter:media${since(windowDays)}`, 'top')
-    },
-    {
-      key: 'replies',
-      label: 'Threads',
-      hint: 'excludes replies',
-      url: searchUrl(`(from:${active}) -filter:replies${since(windowDays)}`, 'live')
-    }
-  ];
-
-  /**
-   * Load widgets.js once, on demand. Returns null if it cannot load — an ad
-   * blocker or a locked-down network is a normal outcome here, not an error.
-   */
-  function loadWidgetScript(): Promise<unknown> {
-    const w = window as unknown as { twttr?: { widgets?: unknown; ready?: (cb: () => void) => void } };
-    if (w.twttr?.widgets) return Promise.resolve(w.twttr);
-
-    return new Promise((resolve) => {
-      const existing = document.getElementById('twitter-wjs') as HTMLScriptElement | null;
-
-      const settle = () => resolve(w.twttr?.widgets ? w.twttr : null);
-
-      if (existing) {
-        existing.addEventListener('load', settle, { once: true });
-        existing.addEventListener('error', () => resolve(null), { once: true });
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.id = 'twitter-wjs';
-      script.src = 'https://platform.twitter.com/widgets.js';
-      script.async = true;
-      script.charset = 'utf-8';
-      script.addEventListener('load', settle, { once: true });
-      script.addEventListener('error', () => resolve(null), { once: true });
-      document.head.appendChild(script);
-    });
-  }
-
-  async function mountTimeline(handle: string) {
-    if (mounted.has(handle)) return;
+  async function render(handle: string) {
     const target = containers[handle];
-    if (!target) return;
+    if (!target || rendered.has(handle)) return;
 
-    mounted.add(handle);
+    rendered.add(handle);
     state[handle] = 'loading';
 
-    const twttr = (await loadWidgetScript()) as
-      | { widgets: { createTimeline: (src: unknown, el: HTMLElement, opts: unknown) => Promise<unknown> } }
-      | null;
+    // The marketing site is dark-only, so the embed is pinned to dark.
+    const ok = await mountTimeline(target, {
+      handle,
+      theme: 'dark',
+      height: TIMELINE_HEIGHT,
+      borderColor: '#1a1a25'
+    });
 
-    if (!twttr) {
-      state[handle] = 'failed';
-      mounted.delete(handle);
-      return;
-    }
-
-    const timeout = new Promise<null>((resolve) =>
-      setTimeout(() => resolve(null), READY_TIMEOUT_MS)
-    );
-
-    try {
-      const frame = await Promise.race([
-        twttr.widgets.createTimeline(
-          { sourceType: 'profile', screenName: handle },
-          target,
-          {
-            height: TIMELINE_HEIGHT,
-            theme: 'dark',
-            // Strip X's own header/footer/border so the embed sits in our card.
-            chrome: 'noheader nofooter noborders transparent',
-            borderColor: '#1a1a25',
-            dnt: true
-          }
-        ),
-        timeout
-      ]);
-      state[handle] = frame ? 'ready' : 'failed';
-      if (!frame) mounted.delete(handle);
-    } catch {
-      state[handle] = 'failed';
-      mounted.delete(handle);
-    }
+    state[handle] = ok ? 'ready' : 'failed';
+    if (!ok) rendered.delete(handle);
   }
 
   function select(handle: string) {
     active = handle;
-    if (visible) mountTimeline(handle);
+    if (visible) render(handle);
   }
 
+  let stopWatching: (() => void) | undefined;
+
   onMount(() => {
-    // The wall sits at the bottom of a long page; loading a third-party script
-    // for something nobody has scrolled to yet is pure waste.
-    //
-    // This uses a plain rect check rather than IntersectionObserver. IO is the
-    // tidier API, but it reports nothing in environments that are not
-    // compositing frames (headless runs, background tabs in some browsers),
-    // and a wall that silently never loads is a worse failure than a scroll
-    // listener. The listener is passive and removes itself on first hit.
-    let done = false;
-
-    const check = () => {
-      if (done || !section) return;
-      const rect = section.getBoundingClientRect();
-      const nearViewport = rect.top < window.innerHeight + 300 && rect.bottom > -300;
-      if (!nearViewport) return;
-
-      done = true;
+    stopWatching = whenNearViewport(section, () => {
       visible = true;
-      mountTimeline(active);
-      teardown();
-    };
-
-    // Called directly rather than through requestAnimationFrame: rAF is
-    // throttled in background and non-compositing tabs, which would leave the
-    // wall stuck on its spinner until the tab was focused. check() is one rect
-    // read and unbinds itself on first hit, so the cost is negligible.
-    const onScroll = () => check();
-
-    function teardown() {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-      document.removeEventListener('visibilitychange', onScroll);
-    }
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll, { passive: true });
-    document.addEventListener('visibilitychange', onScroll);
-    check();
-
-    return teardown;
+      render(active);
+    });
   });
 
-  $: activeAccount = ACCOUNTS.find((a) => a.handle === active) ?? ACCOUNTS[0];
+  onDestroy(() => stopWatching?.());
 </script>
 
 <section
@@ -280,7 +96,7 @@
 
   <!-- Account tabs -->
   <div class="mb-4 flex gap-2 max-md:flex-col" role="tablist" aria-label="X accounts">
-    {#each ACCOUNTS as account (account.handle)}
+    {#each X_ACCOUNTS as account (account.handle)}
       {@const isActive = account.handle === active}
       <button
         type="button"
@@ -314,7 +130,7 @@
         Search @{active} on X
       </p>
       <div class="flex gap-1" role="group" aria-label="Time window">
-        {#each WINDOWS as w (w.key)}
+        {#each TIME_WINDOWS as w (w.key)}
           <button
             type="button"
             class="rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors"
@@ -353,7 +169,7 @@
   </div>
 
   <!-- Timeline panels -->
-  {#each ACCOUNTS as account (account.handle)}
+  {#each X_ACCOUNTS as account (account.handle)}
     <div
       id="x-panel-{account.handle}"
       role="tabpanel"
@@ -366,7 +182,7 @@
       >
         <div bind:this={containers[account.handle]} class="x-embed" />
 
-        {#if state[account.handle] === 'loading' || state[account.handle] === 'idle'}
+        {#if state[account.handle] !== 'ready' && state[account.handle] !== 'failed'}
           <div
             class="flex flex-col items-center justify-center gap-3 px-6 text-center"
             style="height: {TIMELINE_HEIGHT}px;"
