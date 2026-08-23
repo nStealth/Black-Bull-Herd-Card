@@ -2,7 +2,7 @@
 // Shared across Vercel instances; when Redis is absent it fails open, since
 // blocking real users is worse than letting abuse through on a dev instance.
 
-import { redis, isRedisReady } from '$lib/redis';
+import { redis, isRedisReady } from '$lib/server/redis';
 
 export interface RateLimitResult {
   allowed: boolean;

@@ -5,9 +5,10 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getTier, getRankTier } from '$lib/tiers';
-import { getAnsemBalance, isValidPublicKey } from '$lib/solana';
+import { isValidPublicKey } from '$lib/solana';
+import { getAnsemBalance } from '$lib/server/solana';
 import { getEntry, saveEntry } from '$lib/db';
-import { redis, isRedisReady } from '$lib/redis';
+import { redis, isRedisReady } from '$lib/server/redis';
 import { clientKey, rateLimit } from '$lib/server/rateLimit';
 
 // Every miss writes a row, so an unthrottled caller could grow the table with

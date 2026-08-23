@@ -2,7 +2,7 @@
 // Uses Upstash Redis when configured so all Vercel instances share one cache,
 // and falls back to a per-instance in-memory map otherwise.
 
-import { redis, isRedisReady } from '$lib/redis';
+import { redis, isRedisReady } from '$lib/server/redis';
 
 interface MemoryEntry {
   value: unknown;

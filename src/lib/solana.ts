@@ -1,107 +1,8 @@
-// Solana blockchain interaction module
-// Uses @solana/web3.js for read-only token balance lookup
-
-import { Connection, PublicKey } from '@solana/web3.js';
-import { ANSEM_MINT } from './tiers';
-import { rpcQueue } from './rpcQueue';
-
-const PUBLIC_RPC = 'https://api.mainnet-beta.solana.com';
-
-/**
- * Read the RPC endpoint server-side only.
- *
- * This module is also imported by browser code (connectWallet / disconnectWallet),
- * so `process` is guarded. It is deliberately not a VITE_ variable: those are
- * inlined into the client bundle, which would publish the API key.
- */
-function rpcEndpoint(): string {
-  if (typeof process === 'undefined' || !process.env) return PUBLIC_RPC;
-  return process.env.RPC_URL?.trim() || PUBLIC_RPC;
-}
-
-let connection: Connection | null = null;
-
-function getConnection(): Connection {
-  if (!connection) {
-    connection = new Connection(rpcEndpoint(), {
-      commitment: 'confirmed',
-      confirmTransactionInitialTimeout: 60000
-    });
-  }
-  return connection;
-}
-
-export interface BalanceResult {
-  balance: number;
-  success: boolean;
-  error?: string;
-}
-
-/**
- * Get $ANSEM token balance for a wallet address
- * Uses getParsedTokenAccountsByOwner for accurate balance lookup
- */
-export async function getAnsemBalance(walletAddress: string): Promise<BalanceResult> {
-  try {
-    // Validate address format
-    if (!isValidPublicKey(walletAddress)) {
-      return { balance: 0, success: false, error: 'Invalid wallet address format' };
-    }
-
-    const conn = getConnection();
-    const walletPubkey = new PublicKey(walletAddress);
-    const mintPubkey = new PublicKey(ANSEM_MINT);
-
-    // Fetch all token accounts for this wallet that match the $ANSEM mint
-    // Queued so we don't burst past the RPC provider's rate limit.
-    const response = await rpcQueue(() =>
-      conn.getParsedTokenAccountsByOwner(walletPubkey, {
-        mint: mintPubkey
-      })
-    );
-
-    // Sum up all token balances (user might have multiple accounts)
-    let totalBalance = 0;
-    
-    for (const account of response.value) {
-      const accountData = account.account.data;
-      if (accountData && 'parsed' in accountData && accountData.parsed) {
-        const info = accountData.parsed.info;
-        if (info && typeof info.tokenAmount === 'object') {
-          const amount = info.tokenAmount;
-          if (amount.uiAmount !== null && amount.uiAmount !== undefined) {
-            totalBalance += amount.uiAmount;
-          } else {
-            totalBalance += Number(BigInt(amount.amount)) / Math.pow(10, amount.decimals);
-          }
-        }
-      }
-    }
-
-    const balance = typeof totalBalance === 'bigint' 
-      ? Number(totalBalance) 
-      : totalBalance;
-
-    return { balance, success: true };
-  } catch (error) {
-    console.error('Error fetching ANSEM balance:', error);
-    
-    if (error instanceof Error) {
-      if (error.message.includes('Invalid public key')) {
-        return { balance: 0, success: false, error: 'Invalid wallet address' };
-      }
-      if (error.message.includes('429') || error.message.includes('rate limit')) {
-        return { balance: 0, success: false, error: 'Rate limited. Please try again.' };
-      }
-    }
-    
-    return { 
-      balance: 0, 
-      success: false, 
-      error: 'Failed to fetch balance. Please try again.' 
-    };
-  }
-}
+// Browser-side wallet module.
+//
+// Everything here talks to the injected Phantom provider — no RPC, no network,
+// no secrets, no dependencies. Balance lookups need an RPC endpoint and live in
+// `$lib/server/solana`, which the browser reaches via `/api/check/[wallet]`.
 
 /**
  * Validate Solana public key format
@@ -179,7 +80,7 @@ export async function getConnectedWallet(): Promise<string | null> {
     return null;
   }
 
-    try {
+  try {
     // This doesn't trigger a popup if already connected
     const response = await window.solana.connect({ onlyIfTrusted: true });
     if (response?.publicKey) {
