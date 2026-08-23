@@ -33,6 +33,16 @@
       why: 'Aggregates hide who is actually moving. Every row links to Solscan so you can verify a print.'
     },
     {
+      name: 'If You Had Bought',
+      what: 'Pick a date and an amount to see what that position would be worth today, in tokens, dollars and multiple.',
+      why: 'Priced off real daily closes, never a projection. The launch entry is the bonding curve\u2019s opening day \u2014 a price almost nobody actually got \u2014 and is labelled as such rather than presented as a realistic entry.'
+    },
+    {
+      name: 'vs Solana',
+      what: 'The token\u2019s 7-day and 30-day move next to SOL\u2019s over the same windows, and the gap between them.',
+      why: 'Up 60% while the chain is up 28% is a very different result from up 60% while the chain is up 55%. The comparison separates the token\u2019s own move from the market that carried it.'
+    },
+    {
       name: 'Find Your Rank',
       what: 'Paste any Solana address to see its position among every holder, its balance and live value, its tier, and how far it is from the next one.',
       why: 'Address only — no wallet connection, no signature, nothing to approve. Ranking runs on the server because it needs the whole holder list; sending ~90,000 rows to a browser to answer one question would cost megabytes a visitor.'
@@ -80,6 +90,7 @@
     { data: 'Rank, all-time high/low, 7d & 30d change', from: 'CoinGecko, across every venue' },
     { data: 'Total supply, mint & freeze authority', from: 'Solana mainnet, read from the mint' },
     { data: 'Slippage at size, both directions', from: 'Jupiter router quotes' },
+    { data: 'SOL benchmark for relative strength', from: 'CoinGecko daily closes' },
     { data: 'Holder rankings and distribution', from: 'Helius DAS token-account index' }
   ];
 

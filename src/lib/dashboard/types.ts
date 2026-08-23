@@ -212,6 +212,14 @@ export interface WalletRank {
   poolLabel: string | null;
 }
 
+/** Same-period move of the chain this token trades on, for comparison. */
+export interface Benchmark {
+  symbol: string;
+  name: string;
+  change7dPct: number | null;
+  change30dPct: number | null;
+}
+
 export interface ProviderStatus {
   dexscreener: Availability;
   holders: Availability;
@@ -242,6 +250,7 @@ export interface DashboardSnapshot {
   market: MarketStats | null;
   depth: DepthLadder | null;
   risk: RiskProfile | null;
+  benchmark: Benchmark | null;
   status: ProviderStatus;
   updatedAt: number;
 }

@@ -10,12 +10,14 @@ import { entityMap } from './entities';
 import { getPriceSeries, getRecentTrades, getTokenMeta, type TokenMeta } from './geckoterminal';
 import { getSupply, holdersAvailable, indexHolders, type HolderIndex } from './holders';
 import { getDepthLadder } from './jupiter';
+import { getSolBenchmark } from './benchmark';
 import { buildWalletRank } from './rank';
 import { buildRiskProfile } from './risk';
 import { isRedisReady } from '$lib/server/redis';
 import { getMintAuthorities } from './security';
 import type {
   ActivityStats,
+  Benchmark,
   WalletRank,
   DepthLadder,
   RiskProfile,
@@ -51,6 +53,7 @@ const STALE = {
   chart: 3600,
   trades: 300,
   depth: 1800,
+  benchmark: 21_600,
   ranking: 3600,
   authorities: 86_400,
   holders: 7200
@@ -196,6 +199,23 @@ async function loadDepth(): Promise<DepthLadder | null> {
   );
 }
 
+/** SOL's own move over the same windows, cached hard — it barely moves hourly. */
+async function loadBenchmark(): Promise<Benchmark | null> {
+  return cached(
+    'dash:benchmark:sol:v1',
+    3600,
+    async () => {
+      try {
+        return await getSolBenchmark();
+      } catch (error) {
+        console.error('[market] SOL benchmark failed:', error);
+        return null;
+      }
+    },
+    { staleTtlSec: STALE.benchmark }
+  );
+}
+
 async function loadRanking(): Promise<MarketStats | null> {
   const meta = await loadTokenMeta();
   if (!meta?.coingeckoId) return null;
@@ -316,7 +336,8 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     series7d,
     series30d,
     seriesAll,
-    depth
+    depth,
+    benchmark
   ] = await Promise.all([
     loadMarket(),
     loadSupply(),
@@ -327,7 +348,8 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     loadPriceSeries('7d'),
     loadPriceSeries('30d'),
     loadPriceSeries('all'),
-    loadDepth()
+    loadDepth(),
+    loadBenchmark()
   ]);
 
   // Daily closes are the right granularity for volatility and drawdown, and
@@ -414,6 +436,7 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     market: marketStats,
     depth,
     risk,
+    benchmark,
     status,
     updatedAt: Date.now()
   };
@@ -422,6 +445,7 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
 export { holdersAvailable };
 export type {
   ActivityStats,
+  Benchmark,
   Candle,
   WalletRank,
   DepthLadder,

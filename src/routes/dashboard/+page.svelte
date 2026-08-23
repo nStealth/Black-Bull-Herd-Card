@@ -21,6 +21,8 @@
   import DepthPanel from '$lib/components/dashboard/DepthPanel.svelte';
   import RiskPanel from '$lib/components/dashboard/RiskPanel.svelte';
   import WalletRankPanel from '$lib/components/dashboard/WalletRankPanel.svelte';
+  import BuyBackPanel from '$lib/components/dashboard/BuyBackPanel.svelte';
+  import BenchmarkPanel from '$lib/components/dashboard/BenchmarkPanel.svelte';
 
   export let data: PageData;
 
@@ -44,6 +46,7 @@
   $: marketStats = snapshot.market;
   $: depth = snapshot.depth;
   $: risk = snapshot.risk;
+  $: benchmark = snapshot.benchmark;
   // The holder walk can stop short of every token account, so the count is a
   // floor. Showing it bare would assert a total we did not actually reach.
   $: holderIndexPartial = snapshot.distribution?.complete === false;
@@ -228,6 +231,12 @@
          that is about the visitor rather than the token. -->
     <div class="mb-4">
       <WalletRankPanel />
+    </div>
+
+    <!-- Hindsight and relative strength -->
+    <div class="mb-4 grid grid-cols-2 gap-3 max-lg:grid-cols-1">
+      <BuyBackPanel priceUsd={overview.priceUsd} />
+      <BenchmarkPanel {benchmark} {activity} symbol={overview.symbol} />
     </div>
 
     <!-- Execution: what a trade of size actually costs, and how it behaves -->
