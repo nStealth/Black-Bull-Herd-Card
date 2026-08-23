@@ -61,6 +61,17 @@
     error = '';
   }
 
+  /**
+   * "Top 0.00%" is what rank 1 of 89,641 rounds to, and it reads as zero
+   * percent rather than as the very top. Anything under a hundredth of a
+   * percent is shown as a bound instead.
+   */
+  function topShare(percentile: number): string {
+    const share = 100 - percentile;
+    if (share < 0.01) return '<0.01%';
+    return pct(share, 2);
+  }
+
   /** Progress through the current tier, for the bar under the tier name. */
   $: tierProgress =
     result && result.toNextTier && result.toNextTier.tokens > 0
@@ -131,7 +142,7 @@
           </p>
           {#if hasRank && result.percentile !== null}
             <p class="mt-1 text-[0.6875rem]" style="color: var(--d-accent);">
-              Top {pct(100 - result.percentile, 2)} of holders
+              Top {topShare(result.percentile)} of holders
             </p>
           {:else}
             <p class="mt-1 text-[0.6875rem]" style="color: var(--d-text-3);">
