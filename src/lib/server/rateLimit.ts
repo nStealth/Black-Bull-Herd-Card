@@ -8,6 +8,13 @@ export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
   retryAfterSec: number;
+  /**
+   * Why the limiter let a request through, surfaced so "no 429s" can be told
+   * apart from "the limiter is not running". It failed open silently once and
+   * looked identical to working from the outside.
+   */
+  state: 'counted' | 'no-redis' | 'error';
+  hits: number;
 }
 
 export async function rateLimit(
@@ -16,7 +23,7 @@ export async function rateLimit(
   windowSec: number
 ): Promise<RateLimitResult> {
   if (!redis || !isRedisReady()) {
-    return { allowed: true, remaining: limit, retryAfterSec: 0 };
+    return { allowed: true, remaining: limit, retryAfterSec: 0, state: 'no-redis', hits: 0 };
   }
 
   const bucket = `ratelimit:${key}:${Math.floor(Date.now() / (windowSec * 1000))}`;
@@ -29,10 +36,13 @@ export async function rateLimit(
     return {
       allowed: hits <= limit,
       remaining: Math.max(0, limit - hits),
-      retryAfterSec: hits > limit ? windowSec : 0
+      retryAfterSec: hits > limit ? windowSec : 0,
+      state: 'counted',
+      hits
     };
-  } catch {
-    return { allowed: true, remaining: limit, retryAfterSec: 0 };
+  } catch (error) {
+    console.error('[rateLimit] Redis counter failed:', error);
+    return { allowed: true, remaining: limit, retryAfterSec: 0, state: 'error', hits: 0 };
   }
 }
 

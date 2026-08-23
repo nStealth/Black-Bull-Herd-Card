@@ -53,7 +53,14 @@ export const GET: RequestHandler = async ({ params, request, setHeaders }) => {
       }
     }
 
-    setHeaders({ 'cache-control': 'private, max-age=30' });
+    setHeaders({
+      'cache-control': 'private, max-age=30',
+      // Observable on purpose: a limiter that fails open is indistinguishable
+      // from one that is working until you can see the counter.
+      'x-ratelimit-limit': String(LIMIT_PER_MIN),
+      'x-ratelimit-remaining': String(limit.remaining),
+      'x-ratelimit-state': limit.state
+    });
     return json(result);
   } catch (error) {
     console.error('Wallet rank failed:', error);
