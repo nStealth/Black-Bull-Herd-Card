@@ -56,7 +56,7 @@
       </div>
 
       <div class="flex items-center gap-1.5">
-        {#each [{ href: '/dashboard/about', label: 'About' }, { href: '/dashboard/api', label: 'API' }] as link (link.href)}
+        {#each [{ href: '/dashboard/about', label: 'About' }, { href: '/dashboard/docs', label: 'Docs' }, { href: '/dashboard/api', label: 'API' }] as link (link.href)}
           <a
             href={link.href}
             class="rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-[var(--d-hover)]"
