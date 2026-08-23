@@ -9,9 +9,13 @@ import { getDexScreenerData, poolAddresses, type DexScreenerResult } from './dex
 import { entityMap } from './entities';
 import { getPriceSeries, getRecentTrades, getTokenMeta, type TokenMeta } from './geckoterminal';
 import { getSupply, holdersAvailable, indexHolders, type HolderIndex } from './holders';
+import { getDepthLadder } from './jupiter';
+import { buildRiskProfile } from './risk';
 import { getMintAuthorities } from './security';
 import type {
   ActivityStats,
+  DepthLadder,
+  RiskProfile,
   ChartRange,
   DashboardSnapshot,
   MarketStats,
@@ -29,6 +33,7 @@ const META_TTL_SEC = 3600; // coingecko id and graduation state are effectively 
 const RANKING_TTL_SEC = 300; // CoinGecko free tier is rate-limited; do not hammer it
 const SECURITY_TTL_SEC = 600; // authorities change at most once, on revocation
 const TRADES_TTL_SEC = 20; // the tape is the one panel that should feel live
+const DEPTH_TTL_SEC = 120; // eight sequential router quotes; do not run them often
 
 /**
  * How long each provider's last good payload stays usable when a refresh
@@ -42,6 +47,7 @@ const STALE = {
   meta: 86_400,
   chart: 3600,
   trades: 300,
+  depth: 1800,
   ranking: 3600,
   authorities: 86_400,
   holders: 7200
@@ -163,6 +169,30 @@ export async function loadTrades(): Promise<TradeEvent[] | null> {
   );
 }
 
+/**
+ * Slippage ladder from the router. Depends on spot price and decimals, so it
+ * runs after the market and supply loads rather than alongside them.
+ */
+async function loadDepth(): Promise<DepthLadder | null> {
+  const [market, supply] = await Promise.all([loadMarket(), loadSupply()]);
+  const priceUsd = market?.overview.priceUsd ?? 0;
+  if (!priceUsd) return null;
+
+  return cached(
+    'dash:depth:v1',
+    DEPTH_TTL_SEC,
+    async () => {
+      try {
+        return await getDepthLadder(ANSEM_MINT, supply?.decimals ?? DEFAULT_DECIMALS, priceUsd);
+      } catch (error) {
+        console.error('[market] depth ladder failed:', error);
+        return null;
+      }
+    },
+    { staleTtlSec: STALE.depth }
+  );
+}
+
 async function loadRanking(): Promise<MarketStats | null> {
   const meta = await loadTokenMeta();
   if (!meta?.coingeckoId) return null;
@@ -253,17 +283,33 @@ function longWindow(
 }
 
 export async function loadSnapshot(): Promise<DashboardSnapshot> {
-  const [market, supply, holderIndex, ranking, authorities, meta, series7d, series30d] =
-    await Promise.all([
-      loadMarket(),
-      loadSupply(),
-      loadHolderIndex(),
-      loadRanking(),
-      loadAuthorities(),
-      loadTokenMeta(),
-      loadPriceSeries('7d'),
-      loadPriceSeries('30d')
-    ]);
+  const [
+    market,
+    supply,
+    holderIndex,
+    ranking,
+    authorities,
+    meta,
+    series7d,
+    series30d,
+    seriesAll,
+    depth
+  ] = await Promise.all([
+    loadMarket(),
+    loadSupply(),
+    loadHolderIndex(),
+    loadRanking(),
+    loadAuthorities(),
+    loadTokenMeta(),
+    loadPriceSeries('7d'),
+    loadPriceSeries('30d'),
+    loadPriceSeries('all'),
+    loadDepth()
+  ]);
+
+  // Daily closes are the right granularity for volatility and drawdown, and
+  // the 'all' series is already cached for the chart's ALL range.
+  const risk: RiskProfile | null = seriesAll ? buildRiskProfile(seriesAll.candles) : null;
 
   const notes: string[] = [];
   if (!market) {
@@ -311,6 +357,8 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     extendedWindows: series7d || ranking ? 'live' : 'unavailable',
     chart: series7d ? 'live' : 'unavailable',
     trades: 'live', // the tape loads client-side; its own panel reports failure
+    depth: depth ? 'live' : 'unavailable',
+    risk: risk ? 'live' : 'unavailable',
     security: security ? 'live' : 'unavailable',
     ranking: ranking ? 'live' : 'unavailable',
     notes
@@ -340,6 +388,8 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     totalHolders: holderIndex?.totalHolders ?? null,
     security,
     market: marketStats,
+    depth,
+    risk,
     status,
     updatedAt: Date.now()
   };
@@ -349,6 +399,8 @@ export { holdersAvailable };
 export type {
   ActivityStats,
   Candle,
+  DepthLadder,
+  RiskProfile,
   ChartRange,
   DashboardSnapshot,
   Distribution,

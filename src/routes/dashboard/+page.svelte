@@ -18,6 +18,8 @@
   import TradeFeed from '$lib/components/dashboard/TradeFeed.svelte';
   import SecurityPanel from '$lib/components/dashboard/SecurityPanel.svelte';
   import MarketContextPanel from '$lib/components/dashboard/MarketContextPanel.svelte';
+  import DepthPanel from '$lib/components/dashboard/DepthPanel.svelte';
+  import RiskPanel from '$lib/components/dashboard/RiskPanel.svelte';
 
   export let data: PageData;
 
@@ -39,6 +41,8 @@
   $: holdersLive = status.holders === 'live';
   $: security = snapshot.security;
   $: marketStats = snapshot.market;
+  $: depth = snapshot.depth;
+  $: risk = snapshot.risk;
   $: syncedLabel = now && relativeAge(lastSynced);
 
   async function refresh() {
@@ -208,6 +212,14 @@
       <ActivityPanel {activity} />
       <PairsPanel pairs={overview.pairs} />
       <DistributionPanel distribution={snapshot.distribution} />
+    </div>
+
+    <!-- Execution: what a trade of size actually costs, and how it behaves -->
+    <div class="mb-4 grid grid-cols-3 gap-3 max-lg:grid-cols-1">
+      <DepthPanel {depth} />
+      <div class="col-span-2 max-lg:col-span-1">
+        <RiskPanel {risk} />
+      </div>
     </div>
 
     <!-- Risk, cross-market context, order flow -->

@@ -1,0 +1,110 @@
+<script lang="ts">
+  // How much a trade of a given size actually costs in slippage.
+  //
+  // These are real router quotes, not reserve maths. The deepest pools here are
+  // concentrated-liquidity, where constant-product estimates from published
+  // reserves are simply wrong, so the numbers come from the same router a
+  // trader would route through.
+
+  import type { DepthLadder, DepthStep } from '$lib/dashboard/types';
+  import { usdCompact } from '$lib/dashboard/format';
+
+  export let depth: DepthLadder | null;
+
+  /** Slippage bands. Below 1% is noise; past 5% you are moving the market. */
+  const LOW = 1;
+  const HIGH = 5;
+
+  function tone(step: DepthStep): string {
+    if (step.impactPct === null) return 'var(--d-text-3)';
+    if (step.impactPct < LOW) return 'var(--d-up)';
+    if (step.impactPct < HIGH) return '#d99a2d';
+    return 'var(--d-down)';
+  }
+
+  function label(step: DepthStep): string {
+    if (step.impactPct === null) return 'no route';
+    // The router reports a flat 0 for trades below its precision. Printing
+    // "0.00%" would claim a free trade, which is never true.
+    if (step.impactPct === 0) return '<0.01%';
+    return `${step.impactPct.toFixed(2)}%`;
+  }
+
+  /** Bar width, capped so a 15% print does not blow out the row. */
+  function width(step: DepthStep): number {
+    if (step.impactPct === null) return 0;
+    return Math.min(100, (step.impactPct / 20) * 100);
+  }
+
+  $: rows = depth
+    ? depth.buys.map((buy, i) => ({ usd: buy.usd, buy, sell: depth.sells[i] }))
+    : [];
+</script>
+
+<section class="d-card overflow-hidden">
+  <header
+    class="flex flex-wrap items-baseline justify-between gap-2 border-b px-5 py-3.5"
+    style="border-color: var(--d-border);"
+  >
+    <h2 class="text-sm font-semibold" style="color: var(--d-text);">Trade Depth</h2>
+    <span class="text-[0.6875rem]" style="color: var(--d-text-3);">
+      live routing · price impact
+    </span>
+  </header>
+
+  {#if depth && rows.length > 0}
+    <div
+      class="grid grid-cols-[auto_1fr_1fr] gap-x-4 border-b px-5 py-2"
+      style="border-color: var(--d-border);"
+    >
+      <span class="d-label">Size</span>
+      <span class="d-label text-right">Buy</span>
+      <span class="d-label text-right">Sell</span>
+    </div>
+
+    {#each rows as row, i (row.usd)}
+      <div
+        class="px-5 py-3"
+        style="border-top: {i === 0 ? 'none' : '1px solid var(--d-border)'};"
+      >
+        <div class="grid grid-cols-[auto_1fr_1fr] items-baseline gap-x-4">
+          <span class="d-numeric text-xs font-semibold" style="color: var(--d-text-2);">
+            {usdCompact(row.usd)}
+          </span>
+          <span class="d-numeric text-right text-xs font-semibold" style="color: {tone(row.buy)};">
+            {label(row.buy)}
+          </span>
+          <span class="d-numeric text-right text-xs font-semibold" style="color: {tone(row.sell)};">
+            {label(row.sell)}
+          </span>
+        </div>
+
+        <div class="mt-2 grid grid-cols-2 gap-2">
+          {#each [row.buy, row.sell] as step (step === row.buy ? 'b' : 's')}
+            <div class="h-1 overflow-hidden rounded-full" style="background: var(--d-bg-subtle);">
+              <div
+                class="h-full rounded-full transition-[width] duration-500"
+                style="width: {width(step)}%; background: {tone(step)};"
+              />
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/each}
+
+    <p
+      class="border-t px-5 py-2.5 text-[0.625rem] leading-relaxed"
+      style="border-color: var(--d-border); color: var(--d-text-3);"
+    >
+      What a market order of that size would actually cost, routed across every Solana venue.
+      Under {LOW}% is comfortable; over {HIGH}% you are moving the price yourself.
+    </p>
+  {:else}
+    <div class="flex flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">
+      <p class="text-sm font-medium" style="color: var(--d-text);">Depth unavailable</p>
+      <p class="max-w-xs text-[0.6875rem]" style="color: var(--d-text-3);">
+        The router did not return quotes on this refresh.
+      </p>
+    </div>
+  {/if}
+</section>

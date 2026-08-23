@@ -100,13 +100,17 @@
               rel="noopener noreferrer"
               aria-label={link.label}
               title={link.label}
-              class="grid h-10 w-10 place-items-center rounded-xl border transition-colors hover:bg-[var(--d-hover)]"
+              class="relative grid h-10 w-10 place-items-center rounded-xl border transition-colors hover:bg-[var(--d-hover)]"
+              class:vip-glow={link.vip}
               style="border-color: {link.vip
                 ? 'color-mix(in srgb, var(--d-accent) 45%, transparent)'
                 : 'var(--d-border)'};
                      color: {link.vip ? 'var(--d-accent)' : 'var(--d-text-2)'};"
             >
               <span class="h-[18px] w-[18px]"><SocialGlyph icon={link.icon} /></span>
+              {#if link.vip}
+                <span class="vip-dot" aria-hidden="true" />
+              {/if}
             </a>
           {/each}
         </div>
@@ -158,3 +162,53 @@
     </div>
   </footer>
 </div>
+
+<style>
+  /* The VIP link (Ansem's own account) pulses so it reads as the one worth
+     clicking. Both the ring and the dot animate off the dashboard accent, so
+     it stays correct in light and dark. */
+  .vip-glow {
+    animation: vipRing 2.4s ease-in-out infinite;
+  }
+
+  .vip-dot {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 9px;
+    height: 9px;
+    border-radius: 9999px;
+    background: var(--d-accent);
+    border: 2px solid var(--d-bg);
+    animation: vipBlink 2.4s ease-in-out infinite;
+  }
+
+  @keyframes vipRing {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--d-accent) 40%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--d-accent) 0%, transparent);
+    }
+  }
+
+  @keyframes vipBlink {
+    0%,
+    100% {
+      opacity: 1;
+      box-shadow: 0 0 5px color-mix(in srgb, var(--d-accent) 70%, transparent);
+    }
+    50% {
+      opacity: 0.55;
+      box-shadow: 0 0 12px color-mix(in srgb, var(--d-accent) 90%, transparent);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vip-glow,
+    .vip-dot {
+      animation: none;
+    }
+  }
+</style>

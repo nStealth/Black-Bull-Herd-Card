@@ -33,6 +33,16 @@
       why: 'Aggregates hide who is actually moving. Every row links to Solscan so you can verify a print.'
     },
     {
+      name: 'Trade Depth',
+      what: 'What a $1K, $10K, $100K or $1M market order would actually cost in slippage, in both directions.',
+      why: 'Real router quotes across every Solana venue — not maths on published reserves, which is wrong for concentrated-liquidity pools. It answers the question a chart cannot: can you get in and out at size?'
+    },
+    {
+      name: 'Risk Profile',
+      what: 'Annualised volatility, worst drawdowns, best and worst single day, and the share of days that closed green.',
+      why: 'Measured over a trailing 30 days. Over the full history these are dominated by the launch — the bonding curve produced a +4,856% day — which is arithmetically correct and useless.'
+    },
+    {
       name: 'Contract Safety',
       what: 'Mint authority, freeze authority, pooled liquidity, launchpad graduation and the largest non-pool wallet.',
       why: 'Read straight off the mint account on-chain. A list of facts, not a score — a single number invites trusting the number instead of the check.'
@@ -64,6 +74,7 @@
     { data: 'Candles and the live trade tape', from: 'GeckoTerminal, on the deepest pool' },
     { data: 'Rank, all-time high/low, 7d & 30d change', from: 'CoinGecko, across every venue' },
     { data: 'Total supply, mint & freeze authority', from: 'Solana mainnet, read from the mint' },
+    { data: 'Slippage at size, both directions', from: 'Jupiter router quotes' },
     { data: 'Holder rankings and distribution', from: 'Helius DAS token-account index' }
   ];
 

@@ -144,12 +144,46 @@ export interface MarketStats {
   volume30dUsd: number | null;
 }
 
+/** One rung of the depth ladder: what a trade of this size costs in slippage. */
+export interface DepthStep {
+  usd: number;
+  /** Null when the router could not fill this size at all. */
+  impactPct: number | null;
+}
+
+export interface DepthLadder {
+  buys: DepthStep[];
+  sells: DepthStep[];
+  maxRoutableUsd: number | null;
+}
+
+/** Standard risk measures over the daily close history. */
+export interface RiskProfile {
+  /** Annualised standard deviation of daily log returns, in percent. */
+  volatilityPct: number;
+  /** Worst peak-to-trough inside the measured window. */
+  maxDrawdownPct: number;
+  /** Worst peak-to-trough across the token's whole history. */
+  maxDrawdownAllPct: number;
+  currentDrawdownPct: number;
+  bestDayPct: number;
+  worstDayPct: number;
+  /** Share of days that closed green, in percent. */
+  upDayRatio: number;
+  /** Days in the measured window. */
+  days: number;
+  /** Days of price history available in total. */
+  historyDays: number;
+}
+
 export interface ProviderStatus {
   dexscreener: Availability;
   holders: Availability;
   extendedWindows: Availability;
   chart: Availability;
   trades: Availability;
+  depth: Availability;
+  risk: Availability;
   security: Availability;
   ranking: Availability;
   /** Human-readable reason shown in the UI when something is unavailable. */
@@ -164,6 +198,8 @@ export interface DashboardSnapshot {
   totalHolders: number | null;
   security: SecurityInfo | null;
   market: MarketStats | null;
+  depth: DepthLadder | null;
+  risk: RiskProfile | null;
   status: ProviderStatus;
   updatedAt: number;
 }
