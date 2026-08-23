@@ -12,7 +12,7 @@
   /** Rough bands for annualised realised volatility on a memecoin. */
   function volTone(v: number): string {
     if (v < 80) return 'var(--d-up)';
-    if (v < 200) return '#d99a2d';
+    if (v < 200) return 'var(--d-warn-ink)';
     return 'var(--d-down)';
   }
 

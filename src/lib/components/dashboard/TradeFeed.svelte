@@ -74,9 +74,9 @@
       {#each FILTERS as f (f.key)}
         <button
           type="button"
-          class="rounded px-2 py-1 text-[0.6875rem] font-semibold transition-colors"
+          class="rounded px-2 py-1 text-[0.6875rem] font-semibold transition-colors d-tap"
           style={filter === f.key
-            ? 'background: var(--d-accent-soft); color: var(--d-accent);'
+            ? 'background: var(--d-accent-soft); color: var(--d-accent-ink);'
             : 'background: transparent; color: var(--d-text-3);'}
           aria-pressed={filter === f.key}
           on:click={() => (filter = f.key)}

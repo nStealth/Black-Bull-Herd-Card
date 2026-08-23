@@ -225,7 +225,7 @@
               </p>
               <p
                 class="mt-2 border-l-2 pl-3 text-[0.75rem] leading-relaxed"
-                style="border-color: var(--d-accent); color: var(--d-text-3);"
+                style="border-color: var(--d-accent-ink); color: var(--d-text-3);"
               >
                 {panel.watch}
               </p>

@@ -103,7 +103,7 @@
 
   const TONE: Record<Verdict, { color: string; mark: string; label: string }> = {
     pass: { color: 'var(--d-up)', mark: '✓', label: 'Pass' },
-    warn: { color: '#d99a2d', mark: '!', label: 'Caution' },
+    warn: { color: 'var(--d-warn-ink)', mark: '!', label: 'Caution' },
     fail: { color: 'var(--d-down)', mark: '✕', label: 'Risk' },
     unknown: { color: 'var(--d-text-3)', mark: '?', label: 'Unknown' }
   };

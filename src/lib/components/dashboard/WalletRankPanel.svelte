@@ -110,7 +110,7 @@
       type="submit"
       disabled={!canSubmit}
       class="shrink-0 rounded-lg px-4 py-2 text-xs font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-      style="background: var(--d-accent); color: var(--d-bg);"
+      style="background: var(--d-accent-ink); color: var(--d-bg);"
     >
       {loading ? 'Looking up…' : 'Check'}
     </button>
@@ -141,7 +141,7 @@
             {/if}
           </p>
           {#if hasRank && result.percentile !== null}
-            <p class="mt-1 text-[0.6875rem]" style="color: var(--d-accent);">
+            <p class="mt-1 text-[0.6875rem]" style="color: var(--d-accent-ink);">
               Top {topShare(result.percentile)} of holders
             </p>
           {:else}
@@ -165,7 +165,7 @@
       {#if result.isPool}
         <p
           class="border-t px-5 py-2.5 text-[0.6875rem]"
-          style="border-color: var(--d-border); color: var(--d-accent);"
+          style="border-color: var(--d-border); color: var(--d-accent-ink);"
         >
           This address is a liquidity pool{result.poolLabel ? ` (${result.poolLabel})` : ''}, not
           someone's wallet — the balance is pooled liquidity.
@@ -219,7 +219,7 @@
       {:else}
         <p
           class="border-t px-5 py-2.5 text-[0.6875rem]"
-          style="border-color: var(--d-border); color: var(--d-accent);"
+          style="border-color: var(--d-border); color: var(--d-accent-ink);"
         >
           Top tier reached — nothing above {result.tierName}.
         </p>

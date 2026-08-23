@@ -91,7 +91,7 @@
     <div class="grid grid-cols-2 border-t" style="border-color: var(--d-border);">
       <div class="px-5 py-3">
         <p class="d-label">Busiest hour</p>
-        <p class="d-numeric mt-1 text-sm font-semibold" style="color: var(--d-accent);">
+        <p class="d-numeric mt-1 text-sm font-semibold" style="color: var(--d-accent-ink);">
           {fmt(rhythm.peakHourUtc)} UTC
         </p>
         <p class="mt-0.5 text-[0.625rem]" style="color: var(--d-text-3);">

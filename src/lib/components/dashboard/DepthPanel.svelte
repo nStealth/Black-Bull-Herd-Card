@@ -19,7 +19,7 @@
   function tone(step: DepthStep): string {
     if (step.impactPct === null) return 'var(--d-text-3)';
     if (step.impactPct < LOW) return 'var(--d-up)';
-    if (step.impactPct < HIGH) return '#d99a2d';
+    if (step.impactPct < HIGH) return 'var(--d-warn-ink)';
     return 'var(--d-down)';
   }
 

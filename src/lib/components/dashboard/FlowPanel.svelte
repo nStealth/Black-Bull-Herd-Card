@@ -106,7 +106,7 @@
                   <span class="d-numeric min-w-0 truncate text-[0.6875rem]" style="color: var(--d-text-2);">
                     {label(w)}
                     {#if w.rank}
-                      <span class="font-semibold" style="color: var(--d-accent);">#{w.rank}</span>
+                      <span class="font-semibold" style="color: var(--d-accent-ink);">#{w.rank}</span>
                     {/if}
                   </span>
                   <span class="d-numeric shrink-0 text-xs font-semibold" style="color: {side.tone};">
@@ -137,7 +137,7 @@
       <div class="mt-2 flex flex-wrap justify-between gap-2 text-[0.625rem]" style="color: var(--d-text-3);">
         <span>under $1K · {pct(flow.sizeSplit.retailPct, 0)}</span>
         <span>$1K–$10K · {pct(flow.sizeSplit.midPct, 0)}</span>
-        <span style="color: var(--d-accent);">over $10K · {pct(flow.sizeSplit.whalePct, 0)}</span>
+        <span style="color: var(--d-accent-ink);">over $10K · {pct(flow.sizeSplit.whalePct, 0)}</span>
       </div>
     </div>
   {:else}

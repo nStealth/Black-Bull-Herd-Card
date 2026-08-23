@@ -100,6 +100,7 @@
 
 <style>
   .info-trigger {
+    position: relative;
     display: inline-grid;
     place-items: center;
     width: 15px;
@@ -120,11 +121,26 @@
       background 0.15s ease;
   }
 
+  /*
+    The visual dot is 15px, which is right for something sitting beside a
+    heading. The hit area is not: a finger needs about 44px, so an invisible
+    pad is stretched around it rather than making the marker itself shout.
+  */
+  .info-trigger::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+
   .info-trigger:hover,
   .info-trigger:focus-visible,
   .info-trigger.is-open {
-    color: var(--d-accent);
-    border-color: var(--d-accent);
+    color: var(--d-accent-ink);
+    border-color: var(--d-accent-ink);
     background: var(--d-accent-soft);
     outline: none;
   }

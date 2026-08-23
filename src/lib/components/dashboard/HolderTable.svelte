@@ -110,7 +110,7 @@
               {#if holder.entity}
                 <span
                   class="ml-2 rounded px-1.5 py-0.5 text-[0.625rem] font-semibold"
-                  style="color: var(--d-accent); background: var(--d-accent-soft);"
+                  style="color: var(--d-accent-ink); background: var(--d-accent-soft);"
                   >{holder.entity}</span
                 >
               {/if}

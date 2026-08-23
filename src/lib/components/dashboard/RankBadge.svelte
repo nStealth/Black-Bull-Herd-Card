@@ -6,7 +6,8 @@
   const HIGHLIGHT: Record<number, { fg: string; bg: string }> = {
     1: { fg: '#b98900', bg: 'rgba(185, 137, 0, 0.13)' },
     2: { fg: '#8b95a1', bg: 'rgba(139, 149, 161, 0.15)' },
-    3: { fg: '#a9673b', bg: 'rgba(169, 103, 59, 0.14)' }
+    // Lifted from #a9673b, which read at 4.05:1 against the card and failed AA.
+    3: { fg: '#b57041', bg: 'rgba(181, 112, 65, 0.14)' }
   };
 
   $: highlight = HIGHLIGHT[rank] ?? null;

@@ -66,7 +66,7 @@
       <div class="flex items-center gap-2.5">
         <div
           class="grid h-7 w-7 place-items-center rounded-md text-[0.8125rem] font-bold"
-          style="background: var(--d-accent-soft); color: var(--d-accent);"
+          style="background: var(--d-accent-soft); color: var(--d-accent-ink);"
           aria-hidden="true"
         >
           ◈
@@ -76,7 +76,7 @@
         </span>
         <span
           class="rounded px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wider"
-          style="background: var(--d-accent-soft); color: var(--d-accent);"
+          style="background: var(--d-accent-soft); color: var(--d-accent-ink);"
         >
           Solana
         </span>

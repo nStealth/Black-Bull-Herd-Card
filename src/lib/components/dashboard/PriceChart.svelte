@@ -156,9 +156,9 @@
       {#each RANGES as r (r.key)}
         <button
           type="button"
-          class="d-numeric rounded px-2 py-1 text-[0.6875rem] font-semibold transition-colors"
+          class="d-numeric rounded px-2 py-1 text-[0.6875rem] font-semibold transition-colors d-tap"
           style={range === r.key
-            ? 'background: var(--d-accent-soft); color: var(--d-accent);'
+            ? 'background: var(--d-accent-soft); color: var(--d-accent-ink);'
             : 'background: transparent; color: var(--d-text-3);'}
           aria-pressed={range === r.key}
           class:animate-pulse={pending === r.key}

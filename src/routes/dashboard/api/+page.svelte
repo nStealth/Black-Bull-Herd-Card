@@ -121,7 +121,7 @@
             class="flex flex-wrap items-center justify-between gap-2 border-b px-5 py-2.5"
             style="border-color: var(--d-border);"
           >
-            <code class="d-numeric min-w-0 truncate text-xs font-semibold" style="color: var(--d-accent);">
+            <code class="d-numeric min-w-0 truncate text-xs font-semibold" style="color: var(--d-accent-ink);">
               GET {endpoint.path}
             </code>
             <span class="d-numeric shrink-0 text-[0.625rem]" style="color: var(--d-text-3);">

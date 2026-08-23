@@ -98,9 +98,9 @@
         {#each AMOUNTS as a (a)}
           <button
             type="button"
-            class="d-numeric rounded px-2 py-1 text-[0.6875rem] font-semibold transition-colors"
+            class="d-numeric rounded px-2 py-1 text-[0.6875rem] font-semibold transition-colors d-tap"
             style={amount === a
-              ? 'background: var(--d-accent-soft); color: var(--d-accent);'
+              ? 'background: var(--d-accent-soft); color: var(--d-accent-ink);'
               : 'background: transparent; color: var(--d-text-3);'}
             aria-pressed={amount === a}
             on:click={() => (amount = a)}
@@ -155,9 +155,9 @@
       <div class="mt-2 flex flex-wrap gap-1">
         <button
           type="button"
-          class="rounded px-2 py-0.5 text-[0.625rem] font-semibold transition-colors"
+          class="d-tap rounded px-2 py-0.5 text-[0.625rem] font-semibold transition-colors"
           style={isLaunchDay
-            ? 'background: var(--d-accent-soft); color: var(--d-accent);'
+            ? 'background: var(--d-accent-soft); color: var(--d-accent-ink);'
             : 'background: transparent; color: var(--d-text-3);'}
           on:click={() => (index = 0)}
         >
@@ -166,7 +166,7 @@
         {#each [30, 14, 7] as d (d)}
           <button
             type="button"
-            class="rounded px-2 py-0.5 text-[0.625rem] font-semibold transition-colors"
+            class="d-tap rounded px-2 py-0.5 text-[0.625rem] font-semibold transition-colors"
             style="background: transparent; color: var(--d-text-3);"
             on:click={() => jumpTo(d)}
           >

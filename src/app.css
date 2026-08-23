@@ -122,11 +122,19 @@
     --d-border-strong: #d3d8de;
     --d-text: #0f1419;
     --d-text-2: #5b6572;
-    --d-text-3: #8b95a1;
+    --d-text-3: #67717d; /* AA on white, surface-2 and bg-subtle; #8b95a1 was 3.04:1 */
     --d-accent: #00a862;
+    /* Text-safe accent. #00a862 reads 3.10:1 on white — fine as a fill behind
+       a bar, not fine as a word. Used wherever the accent carries text. */
+    --d-accent-ink: #00804a;
     --d-accent-soft: rgba(0, 168, 98, 0.08);
-    --d-up: #00a862;
-    --d-down: #d92d20;
+    /* Caution colour for text. #d99a2d was 2.44:1 on white. */
+    --d-warn-ink: #a3651a;
+    /* Darkened from #00a862 and #d92d20, which read 2.86:1 and 4.46:1 against
+       the palest surface — both of these carry numbers, not just bar fills, and
+       every positive figure on the dashboard was below AA in light mode. */
+    --d-up: #00804a;
+    --d-down: #c62a1e;
     --d-shadow: 0 1px 2px rgba(15, 20, 25, 0.04), 0 1px 3px rgba(15, 20, 25, 0.06);
     --d-shadow-lg: 0 4px 12px rgba(15, 20, 25, 0.06);
     --d-glow: none;
@@ -144,9 +152,13 @@
     --d-border-strong: #323b47;
     --d-text: #f2f5f8;
     --d-text-2: #9aa5b1;
-    --d-text-3: #6b7684;
+    --d-text-3: #788591; /* AA on bg, surface and surface-2; #6b7684 was 3.75:1 */
     --d-accent: #00d47e;
+    /* On dark the accent already clears AA as text, so the ink token matches
+       it and only the light theme diverges. */
+    --d-accent-ink: #00d47e;
     --d-accent-soft: rgba(0, 212, 126, 0.1);
+    --d-warn-ink: #e0a63c;
     --d-up: #00d47e;
     --d-down: #f0616d;
     --d-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -182,6 +194,30 @@
     border: 1px solid var(--d-border);
     border-radius: 12px;
     box-shadow: var(--d-shadow);
+  }
+
+  /*
+    Segmented controls — chart ranges, tape filters, time windows — are sized
+    for a mouse. On a touch device the same 35x25 target is a coin toss, so the
+    hit area is padded to the platform minimum on coarse pointers only. The
+    visual size is untouched; the pad is invisible.
+  */
+  @media (pointer: coarse) {
+    .d-tap {
+      position: relative;
+    }
+
+    .d-tap::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 44px;
+      min-height: 44px;
+      width: 100%;
+      height: 100%;
+      transform: translate(-50%, -50%);
+    }
   }
 
   .d-numeric {
