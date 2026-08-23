@@ -36,11 +36,15 @@
    * enumerated. If the walk hit its page cap, the shares below describe a
    * subset, and saying so is the difference between a figure and a guess.
    */
+  // Guarded rather than defaulted: a payload cached before these fields existed
+  // would otherwise render as a confident "covers 0% of supply".
+  $: hasCoverage = typeof distribution?.coveragePct === 'number';
   $: coverage = distribution?.coveragePct ?? 0;
-  $: capped = distribution ? !distribution.complete : false;
-  $: rankedShown = distribution
-    ? distribution.rankedCount < distribution.ownerCount
-    : false;
+  $: capped = hasCoverage && distribution?.complete === false;
+  $: rankedShown =
+    typeof distribution?.rankedCount === 'number' &&
+    typeof distribution?.ownerCount === 'number' &&
+    distribution.rankedCount < distribution.ownerCount;
 </script>
 
 <section class="d-card overflow-hidden">
@@ -111,17 +115,19 @@
         </div>
       {/each}
     </div>
-    <p
-      class="border-t px-5 py-2.5 text-[0.625rem] leading-relaxed"
-      style="border-color: var(--d-border); color: {capped ? 'var(--d-down)' : 'var(--d-text-3)'};"
-    >
-      {#if capped}
-        Partial index — the token-account walk hit its page limit, so these shares cover only
-        {pct(coverage, 1)} of supply. Treat them as a floor, not a total.
-      {:else}
-        Covers {pct(coverage, 1)} of supply across {count(distribution.ownerCount)} holders.
-      {/if}
-    </p>
+    {#if hasCoverage}
+      <p
+        class="border-t px-5 py-2.5 text-[0.625rem] leading-relaxed"
+        style="border-color: var(--d-border); color: {capped ? 'var(--d-down)' : 'var(--d-text-3)'};"
+      >
+        {#if capped}
+          Partial index — the walk hit its limit, so these shares cover only
+          {pct(coverage, 1)} of supply. Treat them as a floor, not a total.
+        {:else}
+          Covers {pct(coverage, 1)} of supply across {count(distribution.ownerCount)} holders.
+        {/if}
+      </p>
+    {/if}
   {:else}
     <p class="px-5 py-10 text-center text-[0.8125rem]" style="color: var(--d-text-3);">
       Unlocks with the holder index.

@@ -216,7 +216,10 @@ export async function loadHolderIndex(): Promise<HolderIndex | null> {
   if (!holdersAvailable()) return null;
 
   return cached(
-    'dash:holders:v1',
+    // v2: the payload gained coverage fields when the walk stopped truncating.
+    // Bumping the key stops the new code being handed a cached v1 object that
+    // lacks them, which would render as "covers 0% of supply".
+    'dash:holders:v2',
     HOLDERS_TTL_SEC,
     async () => {
       const [market, supply] = await Promise.all([loadMarket(), loadSupply()]);
