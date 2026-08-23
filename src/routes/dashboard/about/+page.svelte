@@ -149,7 +149,9 @@
     </div>
     <p class="mt-2.5 text-[0.6875rem] leading-relaxed" style="color: var(--d-text-3);">
       Nothing here is estimated or interpolated. If a provider is unreachable, the panel says so
-      rather than filling the gap with a guess.
+      rather than filling the gap with a guess. Responses are cached so the same figure is not
+      re-fetched for every visitor, and a rate-limited provider serves its last good payload
+      rather than a blank panel.
     </p>
   </section>
 

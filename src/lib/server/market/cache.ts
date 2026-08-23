@@ -59,6 +59,16 @@ interface CacheOptions {
    * good payload instead of blanking the panel.
    */
   staleTtlSec?: number;
+  /**
+   * Serve the stale value immediately when the fresh one has expired, and
+   * refresh in the background instead of making the caller wait.
+   *
+   * For the holder index this is the difference between a 20-second page load
+   * and an instant one: the walk enumerates tens of thousands of token accounts
+   * and cannot be made fast, but nobody needs to watch it happen. Requires
+   * staleTtlSec, since the stale copy is what gets served.
+   */
+  serveStaleWhileRevalidating?: boolean;
 }
 
 const staleKey = (key: string) => `${key}:stale`;
@@ -100,6 +110,37 @@ export async function cached<T>(
   if (shared !== null) {
     writeMemory(key, shared, Math.min(ttlSec, 30));
     return shared;
+  }
+
+  // Fresh copy has expired. If a stale one exists and the caller opted in,
+  // hand it back now and let the refresh happen behind the response.
+  if (options.staleTtlSec && options.serveStaleWhileRevalidating) {
+    const stale = readMemory<T>(staleKey(key)) ?? (await readShared<T>(staleKey(key)));
+    if (stale !== null && stale !== undefined) {
+      if (!inFlight.has(key)) {
+        const run = (async () => {
+          try {
+            return await fetcher();
+          } catch {
+            return null as T;
+          }
+        })();
+        inFlight.set(key, run);
+        void run
+          .then(async (value) => {
+            if (value === null || value === undefined) return;
+            writeMemory(key, value, Math.min(ttlSec, 30));
+            await writeShared(key, value, ttlSec);
+            writeMemory(staleKey(key), value, options.staleTtlSec as number);
+            await writeShared(staleKey(key), value, options.staleTtlSec as number);
+          })
+          .catch(() => {
+            // background refresh failures are not the caller's problem
+          })
+          .finally(() => inFlight.delete(key));
+      }
+      return stale;
+    }
   }
 
   let fresh: T;

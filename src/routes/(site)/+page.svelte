@@ -7,6 +7,7 @@
   import Particles from "$lib/components/molecules/Particles.svelte";
   import Confetti from "$lib/components/molecules/Confetti.svelte";
   import HeroSection from "$lib/components/organisms/HeroSection.svelte";
+  import CampaignEndedBanner from "$lib/components/organisms/CampaignEndedBanner.svelte";
   import WhatSection from "$lib/components/organisms/WhatSection.svelte";
   import Card from "$lib/components/ui/Card.svelte";
   import Button from "$lib/components/ui/Button.svelte";
@@ -263,6 +264,8 @@
 <Particles />
 
 <main class="flex flex-col items-center px-6 pb-16 pt-[72px]">
+  <CampaignEndedBanner />
+
   <HeroSection />
   <WhatSection />
 

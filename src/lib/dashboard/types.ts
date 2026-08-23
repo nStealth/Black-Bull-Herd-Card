@@ -192,6 +192,12 @@ export interface ProviderStatus {
   trades: Availability;
   depth: Availability;
   risk: Availability;
+  /**
+   * 'shared' when Upstash Redis is wired up and every serverless instance
+   * reads one cache; 'instance' when each instance keeps its own, which means
+   * cold starts rebuild expensive things like the holder walk from scratch.
+   */
+  cache: 'shared' | 'instance';
   security: Availability;
   ranking: Availability;
   /** Human-readable reason shown in the UI when something is unavailable. */

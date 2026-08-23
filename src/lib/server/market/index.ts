@@ -11,6 +11,7 @@ import { getPriceSeries, getRecentTrades, getTokenMeta, type TokenMeta } from '.
 import { getSupply, holdersAvailable, indexHolders, type HolderIndex } from './holders';
 import { getDepthLadder } from './jupiter';
 import { buildRiskProfile } from './risk';
+import { isRedisReady } from '$lib/server/redis';
 import { getMintAuthorities } from './security';
 import type {
   ActivityStats,
@@ -233,7 +234,7 @@ export async function loadHolderIndex(): Promise<HolderIndex | null> {
         return null;
       }
     },
-    { staleTtlSec: STALE.holders }
+    { staleTtlSec: STALE.holders, serveStaleWhileRevalidating: true }
   );
 }
 
@@ -362,6 +363,7 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     trades: 'live', // the tape loads client-side; its own panel reports failure
     depth: depth ? 'live' : 'unavailable',
     risk: risk ? 'live' : 'unavailable',
+    cache: isRedisReady() ? 'shared' : 'instance',
     security: security ? 'live' : 'unavailable',
     ranking: ranking ? 'live' : 'unavailable',
     notes
