@@ -33,7 +33,7 @@ export const OFFICIAL_LINKS: SocialLink[] = [
     label: 'CoinGecko',
     icon: 'coingecko'
   },
-  { href: 'https://app.bullpen.fi/', label: 'BullPen', icon: 'bullpen' },
+  { href: 'https://bullpen.fi/', label: 'BullPen', icon: 'bullpen' },
   { href: 'https://x.com/blackbullsol', label: 'Black Bull on X', icon: 'x' },
   { href: 'https://x.com/blknoiz06', label: 'Ansem on X', icon: 'x', vip: true }
 ];
