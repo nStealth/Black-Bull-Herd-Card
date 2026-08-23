@@ -46,9 +46,28 @@ export async function rateLimit(
   }
 }
 
-/** Best-effort client identity: Vercel sets x-forwarded-for on every request. */
+/**
+ * Client identity for rate limiting.
+ *
+ * Order matters. This site sits behind Cloudflare in front of Vercel, and
+ * `x-forwarded-for` is not stable there: the chain varies with the edge node
+ * that handled the request, so bucketing on it handed the same visitor a
+ * different counter per node and multiplied the effective limit by however
+ * many nodes were in play. Observed directly — the remaining count moved
+ * 22 → 25 → 17 → 21 across consecutive requests from one machine, which a
+ * single shared counter cannot do.
+ *
+ * `cf-connecting-ip` is Cloudflare's canonical client address and does not
+ * move between nodes, so it is preferred wherever present.
+ */
 export function clientKey(request: Request, fallback = 'unknown'): string {
-  const forwarded = request.headers.get('x-forwarded-for');
+  const h = request.headers;
+
+  const direct = h.get('cf-connecting-ip')?.trim() || h.get('true-client-ip')?.trim();
+  if (direct) return direct;
+
+  const forwarded = h.get('x-forwarded-for');
   if (forwarded) return forwarded.split(',')[0].trim();
-  return request.headers.get('x-real-ip')?.trim() || fallback;
+
+  return h.get('x-real-ip')?.trim() || fallback;
 }
