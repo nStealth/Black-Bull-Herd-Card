@@ -25,6 +25,7 @@
   import BenchmarkPanel from '$lib/components/dashboard/BenchmarkPanel.svelte';
   import PulsePanel from '$lib/components/dashboard/PulsePanel.svelte';
   import RhythmPanel from '$lib/components/dashboard/RhythmPanel.svelte';
+  import FlowPanel from '$lib/components/dashboard/FlowPanel.svelte';
 
   export let data: PageData;
 
@@ -51,6 +52,7 @@
   $: benchmark = snapshot.benchmark;
   $: pulse = snapshot.pulse;
   $: rhythm = snapshot.rhythm;
+  $: flow = snapshot.flow;
   // The holder walk can stop short of every token account, so the count is a
   // floor. Showing it bare would assert a total we did not actually reach.
   $: holderIndexPartial = snapshot.distribution?.complete === false;
@@ -306,11 +308,18 @@
       </div>
     </div>
 
-    <!-- Risk, cross-market context, order flow -->
+    <!-- Who is moving, and the raw tape it was folded from -->
     <div class="mb-4 grid grid-cols-3 gap-3 max-lg:grid-cols-1">
+      <div class="col-span-2 max-lg:col-span-1">
+        <FlowPanel {flow} />
+      </div>
+      <TradeFeed initial={data.trades} />
+    </div>
+
+    <!-- Risk and cross-market context -->
+    <div class="mb-4 grid grid-cols-2 gap-3 max-lg:grid-cols-1">
       <SecurityPanel {security} />
       <MarketContextPanel market={marketStats} priceUsd={overview.priceUsd} />
-      <TradeFeed initial={data.trades} />
     </div>
 
     <!-- Holders -->

@@ -7,7 +7,14 @@ import { cached } from './cache';
 import { getMarketStats } from './coingecko';
 import { getDexScreenerData, poolAddresses, type DexScreenerResult } from './dexscreener';
 import { entityMap } from './entities';
-import { getPriceSeries, getRecentTrades, getTokenMeta, type TokenMeta } from './geckoterminal';
+import {
+  getAllRecentTrades,
+  getPriceSeries,
+  getRecentTrades,
+  getTokenMeta,
+  type TokenMeta
+} from './geckoterminal';
+import { buildTradeFlow } from './flow';
 import { getSupply, holdersAvailable, indexHolders, type HolderIndex } from './holders';
 import { getDepthLadder } from './jupiter';
 import { getSolBenchmark } from './benchmark';
@@ -19,6 +26,7 @@ import { getMintAuthorities } from './security';
 import type {
   ActivityStats,
   Benchmark,
+  TradeFlow,
   MarketPulse,
   TradingRhythm,
   WalletRank,
@@ -203,6 +211,31 @@ async function loadDepth(): Promise<DepthLadder | null> {
 }
 
 /** SOL's own move over the same windows, cached hard — it barely moves hourly. */
+/**
+ * The unfiltered tape, cached separately from the display tape.
+ *
+ * Flow analysis needs every trade including the dust; the visible tape wants
+ * only prints worth reading. One fetch feeds both.
+ */
+async function loadAllTrades(): Promise<TradeEvent[] | null> {
+  return cached(
+    'dash:trades:all:v1',
+    TRADES_TTL_SEC,
+    async () => {
+      const pool = await primaryPool();
+      if (!pool) return null;
+      try {
+        const trades = await getAllRecentTrades(pool);
+        return trades.length > 0 ? trades : null;
+      } catch (error) {
+        console.error('[market] full trade tape failed:', error);
+        return null;
+      }
+    },
+    { staleTtlSec: STALE.trades }
+  );
+}
+
 async function loadBenchmark(): Promise<Benchmark | null> {
   return cached(
     'dash:benchmark:sol:v1',
@@ -355,7 +388,8 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     series30d,
     seriesAll,
     depth,
-    benchmark
+    benchmark,
+    allTrades
   ] = await Promise.all([
     loadMarket(),
     loadSupply(),
@@ -367,7 +401,8 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     loadPriceSeries('30d'),
     loadPriceSeries('all'),
     loadDepth(),
-    loadBenchmark()
+    loadBenchmark(),
+    loadAllTrades()
   ]);
 
   // Daily closes are the right granularity for volatility and drawdown, and
@@ -426,6 +461,12 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
       )
     : null;
 
+  // Folding the tape by wallet needs the holder index only for rank labels, so
+  // it degrades to unlabelled wallets rather than disappearing without one.
+  const flow: TradeFlow | null = allTrades
+    ? buildTradeFlow(allTrades, holderIndex?.holders ?? null)
+    : null;
+
   const status: ProviderStatus = {
     dexscreener: market ? 'live' : 'unavailable',
     holders: holderIndex ? 'live' : 'unavailable',
@@ -469,6 +510,7 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     benchmark,
     pulse,
     rhythm,
+    flow,
     status,
     updatedAt: Date.now()
   };
@@ -479,6 +521,8 @@ export type {
   ActivityStats,
   Benchmark,
   Candle,
+  TradeFlow,
+  WalletFlow,
   MarketPulse,
   TradingRhythm,
   WalletRank,

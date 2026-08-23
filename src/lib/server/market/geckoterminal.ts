@@ -124,8 +124,21 @@ export async function getRecentTrades(
   minUsd = 250,
   limit = 60
 ): Promise<TradeEvent[]> {
+  const all = await getAllRecentTrades(poolAddress);
+  return all.filter((t) => t.amountUsd >= minUsd).slice(0, limit);
+}
+
+/**
+ * Every trade the endpoint will return, unfiltered.
+ *
+ * The tape and the flow analysis both read from this one call rather than
+ * fetching twice: the endpoint caps at 300 trades regardless, and asking for
+ * them once and slicing locally halves the pressure on a free tier that
+ * rate-limits aggressively.
+ */
+export async function getAllRecentTrades(poolAddress: string): Promise<TradeEvent[]> {
   const body = await gt<TradesResponse>(
-    `/networks/${NETWORK}/pools/${poolAddress}/trades?trade_volume_in_usd_greater_than=${minUsd}`
+    `/networks/${NETWORK}/pools/${poolAddress}/trades?trade_volume_in_usd_greater_than=0`
   );
 
   const trades: TradeEvent[] = [];
@@ -153,7 +166,7 @@ export async function getRecentTrades(
     });
   }
 
-  return trades.sort((a, b) => b.timestamp - a.timestamp).slice(0, limit);
+  return trades.sort((a, b) => b.timestamp - a.timestamp);
 }
 
 export interface TokenMeta {

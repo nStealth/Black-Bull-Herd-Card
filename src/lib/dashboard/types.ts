@@ -247,6 +247,34 @@ export interface TradingRhythm {
   daysCovered: number;
 }
 
+/** One wallet's net position change across the tape window. */
+export interface WalletFlow {
+  wallet: string;
+  /** Bought minus sold, in USD. Positive means accumulating. */
+  netUsd: number;
+  boughtUsd: number;
+  soldUsd: number;
+  trades: number;
+  /** Position in the holder index, when the wallet appears in it. */
+  rank: number | null;
+  /** Set when the address is a known pool rather than someone's wallet. */
+  entity: string | null;
+}
+
+export interface TradeFlow {
+  accumulators: WalletFlow[];
+  distributors: WalletFlow[];
+  netUsd: number;
+  buyVolumeUsd: number;
+  sellVolumeUsd: number;
+  uniqueWallets: number;
+  tradeCount: number;
+  /** Minutes the analysed tape actually spans — not a day. */
+  windowMinutes: number;
+  /** Share of volume by trade size, so retail and whale flow can be told apart. */
+  sizeSplit: { retailPct: number; midPct: number; whalePct: number };
+}
+
 export interface ProviderStatus {
   dexscreener: Availability;
   holders: Availability;
@@ -280,6 +308,7 @@ export interface DashboardSnapshot {
   benchmark: Benchmark | null;
   pulse: MarketPulse | null;
   rhythm: TradingRhythm | null;
+  flow: TradeFlow | null;
   status: ProviderStatus;
   updatedAt: number;
 }

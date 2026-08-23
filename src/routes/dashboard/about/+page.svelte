@@ -33,6 +33,11 @@
       why: 'Aggregates hide who is actually moving. Every row links to Solscan so you can verify a print.'
     },
     {
+      name: 'Wallet Flow',
+      what: 'Every trade in the tape window folded by wallet — buys positive, sells negative — so the biggest accumulators and distributors are named, with their holder rank where they appear in the index.',
+      why: 'Aggregate volume hides this entirely. A balanced buy-sell split can be one wallet quietly taking the other side of two hundred small sells. The window is whatever the tape covers, stated in the header rather than rounded up to a day.'
+    },
+    {
       name: 'Market Pulse',
       what: 'This hour\u2019s volume against the token\u2019s own 24-hour average, how buy pressure has drifted across 1H/6H/24H, and daily turnover of both liquidity and market cap.',
       why: 'Absolute volume is unreadable without a baseline. Every figure is a ratio against the token itself, so it stays meaningful whatever the market cap does.'
