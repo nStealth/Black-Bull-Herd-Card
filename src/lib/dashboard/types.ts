@@ -184,6 +184,34 @@ export interface RiskProfile {
   historyDays: number;
 }
 
+/** Where a single wallet sits in the holder index. */
+export interface WalletRank {
+  wallet: string;
+  balance: number;
+  valueUsd: number;
+  percentSupply: number;
+  tierId: string;
+  tierName: string;
+  tierColor: string;
+  /**
+   * Position among all holders, best first. Null when the wallet falls outside
+   * the ranked slice — everyone below it holds dust, so a number there would be
+   * precise about something meaningless.
+   */
+  rank: number | null;
+  /** Share of holders this wallet is ahead of, in percent. Null without a rank. */
+  percentile: number | null;
+  /** Holders the index knows about, for context next to the rank. */
+  totalHolders: number;
+  /** Depth of the ranked slice, so the UI can explain an absent rank. */
+  rankedCount: number;
+  /** Tokens still needed for the next tier, and its name. Null at the top tier. */
+  toNextTier: { tokens: number; tierName: string; tierColor: string } | null;
+  /** True when this address is a known AMM pool rather than someone's wallet. */
+  isPool: boolean;
+  poolLabel: string | null;
+}
+
 export interface ProviderStatus {
   dexscreener: Availability;
   holders: Availability;

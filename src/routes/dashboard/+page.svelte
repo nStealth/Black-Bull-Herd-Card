@@ -20,6 +20,7 @@
   import MarketContextPanel from '$lib/components/dashboard/MarketContextPanel.svelte';
   import DepthPanel from '$lib/components/dashboard/DepthPanel.svelte';
   import RiskPanel from '$lib/components/dashboard/RiskPanel.svelte';
+  import WalletRankPanel from '$lib/components/dashboard/WalletRankPanel.svelte';
 
   export let data: PageData;
 
@@ -221,6 +222,12 @@
       <ActivityPanel {activity} />
       <PairsPanel pairs={overview.pairs} />
       <DistributionPanel distribution={snapshot.distribution} />
+    </div>
+
+    <!-- Personal lookup, above the aggregate panels: the one row on this page
+         that is about the visitor rather than the token. -->
+    <div class="mb-4">
+      <WalletRankPanel />
     </div>
 
     <!-- Execution: what a trade of size actually costs, and how it behaves -->

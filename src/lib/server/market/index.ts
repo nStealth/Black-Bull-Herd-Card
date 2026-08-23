@@ -10,11 +10,13 @@ import { entityMap } from './entities';
 import { getPriceSeries, getRecentTrades, getTokenMeta, type TokenMeta } from './geckoterminal';
 import { getSupply, holdersAvailable, indexHolders, type HolderIndex } from './holders';
 import { getDepthLadder } from './jupiter';
+import { buildWalletRank } from './rank';
 import { buildRiskProfile } from './risk';
 import { isRedisReady } from '$lib/server/redis';
 import { getMintAuthorities } from './security';
 import type {
   ActivityStats,
+  WalletRank,
   DepthLadder,
   RiskProfile,
   ChartRange,
@@ -286,6 +288,23 @@ function longWindow(
   };
 }
 
+/**
+ * Look one wallet up in the holder index.
+ *
+ * Deliberately server-side: ranking against 89k holders needs the whole list,
+ * and shipping that to the browser to answer one question would cost megabytes
+ * per visitor. The caller sends an address and gets back a single row.
+ */
+export async function loadWalletRank(
+  wallet: string,
+  fallbackBalance: number | null
+): Promise<WalletRank | null> {
+  const [index, market] = await Promise.all([loadHolderIndex(), loadMarket()]);
+  if (!index) return null;
+
+  return buildWalletRank(wallet, index, market?.overview.priceUsd ?? 0, fallbackBalance);
+}
+
 export async function loadSnapshot(): Promise<DashboardSnapshot> {
   const [
     market,
@@ -404,6 +423,7 @@ export { holdersAvailable };
 export type {
   ActivityStats,
   Candle,
+  WalletRank,
   DepthLadder,
   RiskProfile,
   ChartRange,

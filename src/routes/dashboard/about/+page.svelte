@@ -33,6 +33,11 @@
       why: 'Aggregates hide who is actually moving. Every row links to Solscan so you can verify a print.'
     },
     {
+      name: 'Find Your Rank',
+      what: 'Paste any Solana address to see its position among every holder, its balance and live value, its tier, and how far it is from the next one.',
+      why: 'Address only — no wallet connection, no signature, nothing to approve. Ranking runs on the server because it needs the whole holder list; sending ~90,000 rows to a browser to answer one question would cost megabytes a visitor.'
+    },
+    {
       name: 'Trade Depth',
       what: 'What a $1K, $10K, $100K or $1M market order would actually cost in slippage, in both directions.',
       why: 'Real router quotes across every Solana venue — not maths on published reserves, which is wrong for concentrated-liquidity pools. It answers the question a chart cannot: can you get in and out at size?'
