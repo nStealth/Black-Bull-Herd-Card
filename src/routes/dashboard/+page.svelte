@@ -26,6 +26,7 @@
   import PulsePanel from '$lib/components/dashboard/PulsePanel.svelte';
   import RhythmPanel from '$lib/components/dashboard/RhythmPanel.svelte';
   import FlowPanel from '$lib/components/dashboard/FlowPanel.svelte';
+  import PeerUpsidePanel from '$lib/components/dashboard/PeerUpsidePanel.svelte';
 
   export let data: PageData;
 
@@ -53,6 +54,7 @@
   $: pulse = snapshot.pulse;
   $: rhythm = snapshot.rhythm;
   $: flow = snapshot.flow;
+  $: peers = snapshot.peers;
   // The holder walk can stop short of every token account, so the count is a
   // floor. Showing it bare would assert a total we did not actually reach.
   $: holderIndexPartial = snapshot.distribution?.complete === false;
@@ -291,6 +293,12 @@
     <!-- Price history -->
     <div class="mb-4">
       <PriceChart initial={data.chart} />
+    </div>
+
+    <!-- Directly under the chart: the market-cap scenario is the headline of
+         this page, not a footnote at the bottom of it. -->
+    <div class="mb-4">
+      <PeerUpsidePanel {peers} />
     </div>
 
     <!-- Right now: how hard it is trading, and when it usually does -->

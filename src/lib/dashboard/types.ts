@@ -275,6 +275,32 @@ export interface TradeFlow {
   sizeSplit: { retailPct: number; midPct: number; whalePct: number };
 }
 
+/** One meme coin ANSEM is measured against. */
+export interface PeerCoin {
+  id: string;
+  symbol: string;
+  name: string;
+  imageUrl: string | null;
+  marketCapUsd: number;
+  /** Reconstructed from all-time-high price and today's supply, so an upper bound. */
+  athMarketCapUsd: number | null;
+  priceUsd: number;
+}
+
+/**
+ * Peer market caps alongside ANSEM's own, all on a circulating-supply basis so
+ * the ratios between them mean something.
+ */
+export interface PeerComparison {
+  peers: PeerCoin[];
+  ansem: {
+    priceUsd: number;
+    marketCapUsd: number;
+    circulatingSupply: number;
+    athPriceUsd: number | null;
+  };
+}
+
 export interface ProviderStatus {
   dexscreener: Availability;
   holders: Availability;
@@ -309,6 +335,7 @@ export interface DashboardSnapshot {
   pulse: MarketPulse | null;
   rhythm: TradingRhythm | null;
   flow: TradeFlow | null;
+  peers: PeerComparison | null;
   status: ProviderStatus;
   updatedAt: number;
 }

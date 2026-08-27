@@ -18,6 +18,7 @@ import { buildTradeFlow } from './flow';
 import { getSupply, holdersAvailable, indexHolders, type HolderIndex } from './holders';
 import { getDepthLadder } from './jupiter';
 import { getSolBenchmark } from './benchmark';
+import { getPeerComparison } from './peers';
 import { buildPulse, buildRhythm } from './pulse';
 import { buildWalletRank } from './rank';
 import { buildRiskProfile } from './risk';
@@ -26,6 +27,7 @@ import { getMintAuthorities } from './security';
 import type {
   ActivityStats,
   Benchmark,
+  PeerComparison,
   TradeFlow,
   MarketPulse,
   TradingRhythm,
@@ -65,6 +67,7 @@ const STALE = {
   trades: 300,
   depth: 1800,
   benchmark: 21_600,
+  peers: 21_600,
   ranking: 3600,
   authorities: 86_400,
   holders: 7200
@@ -252,6 +255,27 @@ async function loadBenchmark(): Promise<Benchmark | null> {
   );
 }
 
+/**
+ * Peer market caps. Cached hard: these are multi-billion-dollar caps that move
+ * a fraction of a percent in the time this page stays open, and CoinGecko's
+ * free tier is not generous.
+ */
+async function loadPeers(): Promise<PeerComparison | null> {
+  return cached(
+    'dash:peers:v1',
+    600,
+    async () => {
+      try {
+        return await getPeerComparison();
+      } catch (error) {
+        console.error('[market] peer comparison failed:', error);
+        return null;
+      }
+    },
+    { staleTtlSec: STALE.peers }
+  );
+}
+
 async function loadRanking(): Promise<MarketStats | null> {
   const meta = await loadTokenMeta();
   if (!meta?.coingeckoId) return null;
@@ -389,7 +413,8 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     seriesAll,
     depth,
     benchmark,
-    allTrades
+    allTrades,
+    peers
   ] = await Promise.all([
     loadMarket(),
     loadSupply(),
@@ -402,7 +427,8 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     loadPriceSeries('all'),
     loadDepth(),
     loadBenchmark(),
-    loadAllTrades()
+    loadAllTrades(),
+    loadPeers()
   ]);
 
   // Daily closes are the right granularity for volatility and drawdown, and
@@ -511,6 +537,7 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     pulse,
     rhythm,
     flow,
+    peers,
     status,
     updatedAt: Date.now()
   };
@@ -521,6 +548,8 @@ export type {
   ActivityStats,
   Benchmark,
   Candle,
+  PeerCoin,
+  PeerComparison,
   TradeFlow,
   WalletFlow,
   MarketPulse,

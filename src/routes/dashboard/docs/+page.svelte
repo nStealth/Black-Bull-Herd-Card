@@ -67,6 +67,11 @@
       watch: 'The deepest pool is used because it is the hardest to move with one trade. Thin pools can print prices nobody could actually get.'
     },
     {
+      name: 'Market cap comparison',
+      read: 'Takes another meme coin\u2019s market cap, divides it by ANSEM\u2019s circulating supply, and shows the price ANSEM would trade at with the same cap \u2014 plus what a given holding would be worth there.',
+      watch: 'A scenario, not a forecast. Nothing here says the move is likely; it only answers what the price would be if the cap matched. All five coins are read from one source on a circulating-supply basis, because pairing a peer\u2019s circulating cap with ANSEM\u2019s fully-diluted one would overstate every figure by a factor of 2.4.'
+    },
+    {
       name: 'Market Pulse',
       read: 'Pace is this hour’s volume divided by the average hour of the last day — 1.0x is a normal hour. Buy pressure shows how the split has drifted across 1H, 6H and 24H.',
       watch: 'Turnover above 1x means more than the entire pooled liquidity changed hands in a day. That is a lot of activity relative to how much depth is actually there.'

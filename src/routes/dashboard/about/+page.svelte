@@ -33,6 +33,11 @@
       why: 'Aggregates hide who is actually moving. Every row links to Solscan so you can verify a print.'
     },
     {
+      name: 'Market cap comparison',
+      what: 'What ANSEM would be worth per token at the market cap of Dogecoin, Shiba Inu, Pepe or BONK, and what a given holding would be worth there.',
+      why: 'A hypothetical stated as one. The arithmetic is printed in full \u2014 peer cap divided by circulating supply \u2014 so it can be checked rather than trusted, and every input is live.'
+    },
+    {
       name: 'Wallet Flow',
       what: 'Every trade in the tape window folded by wallet — buys positive, sells negative — so the biggest accumulators and distributors are named, with their holder rank where they appear in the index.',
       why: 'Aggregate volume hides this entirely. A balanced buy-sell split can be one wallet quietly taking the other side of two hundred small sells. The window is whatever the tape covers, stated in the header rather than rounded up to a day.'
