@@ -121,10 +121,13 @@
         style="border-color: var(--d-border); color: {capped ? 'var(--d-down)' : 'var(--d-text-3)'};"
       >
         {#if capped}
-          Partial index — the walk hit its limit, so these shares cover only
-          {pct(coverage, 1)} of supply. Treat them as a floor, not a total.
+          <strong style="color: var(--d-text-2);">Coverage {pct(coverage, 1)} of supply.</strong>
+          {count(distribution.ownerCount)} holders found, {count(distribution.rankedCount)} ranked.
+          The token-account walk is time-bounded and stopped short, so the shares above are a
+          floor rather than a total.
         {:else}
-          Covers {pct(coverage, 1)} of supply across {count(distribution.ownerCount)} holders.
+          <strong style="color: var(--d-text-2);">Coverage {pct(coverage, 1)} of supply.</strong>
+          {count(distribution.ownerCount)} holders found, {count(distribution.rankedCount)} ranked.
         {/if}
       </p>
     {/if}

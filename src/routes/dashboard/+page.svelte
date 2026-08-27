@@ -27,6 +27,7 @@
   import RhythmPanel from '$lib/components/dashboard/RhythmPanel.svelte';
   import FlowPanel from '$lib/components/dashboard/FlowPanel.svelte';
   import PeerUpsidePanel from '$lib/components/dashboard/PeerUpsidePanel.svelte';
+  import PriceHero from '$lib/components/dashboard/PriceHero.svelte';
 
   export let data: PageData;
 
@@ -107,6 +108,24 @@
         .join(' · ')
     : 'Live on-chain analytics for $ANSEM on Solana: price history, order flow, trade depth and contract safety. Free, no wallet needed.';
   $: syncedLabel = now && relativeAge(lastSynced);
+
+  /**
+   * Freshness as three states rather than a binary.
+   *
+   * The header said "Live" whether the snapshot was two seconds or four minutes
+   * old, which is the one situation where a status light actively misleads:
+   * the page refreshes every 30s, so anything past a minute means a refresh has
+   * failed and the figures on screen are older than they look.
+   */
+  $: ageSec = now ? Math.max(0, Math.floor((now - lastSynced) / 1000)) : 0;
+  $: feed =
+    status.dexscreener !== 'live'
+      ? { label: 'DEGRADED', color: 'var(--d-down)' }
+      : ageSec > 180
+        ? { label: 'STALE', color: 'var(--d-down)' }
+        : ageSec > 60
+          ? { label: 'DELAYED', color: 'var(--d-warn-ink)' }
+          : { label: 'LIVE', color: 'var(--d-accent-ink)' };
 
   async function refresh() {
     if (refreshing) return;
@@ -215,9 +234,12 @@
       <span
         class="h-1.5 w-1.5 rounded-full"
         class:animate-pulse={refreshing}
-        style="background: {status.dexscreener === 'live' ? 'var(--d-accent)' : 'var(--d-down)'};"
+        style="background: {feed.color};"
       />
-      <span>{status.dexscreener === 'live' ? 'Live' : 'Degraded'} · synced {syncedLabel}</span>
+      <span>
+        <span class="font-semibold" style="color: {feed.color};">{feed.label}</span>
+        · synced {syncedLabel}
+      </span>
     </div>
   </div>
 
@@ -227,19 +249,13 @@
       message="DexScreener did not respond. The dashboard recovers automatically on the next refresh."
     />
   {:else}
-    <!-- Key metrics -->
+    <!-- Price first, at the weight it deserves -->
+    <div class="mb-3">
+      <PriceHero {overview} {activity} />
+    </div>
+
+    <!-- Everything that qualifies the headline, at secondary weight -->
     <div class="mb-4 grid grid-cols-5 gap-3 max-xl:grid-cols-4 max-lg:grid-cols-2">
-      <StatTile
-        label="Price"
-        value={usd(overview.priceUsd, 4)}
-        delta={activity?.h24.priceChangePct ?? null}
-        hint="24h"
-      />
-      <StatTile
-        label="Market Cap"
-        value={usdCompact(overview.marketCapUsd)}
-        hint="FDV {usdCompact(overview.fdvUsd)}"
-      />
       <StatTile
         label="Rank"
         value={marketStats?.rank ? `#${marketStats.rank}` : '—'}
@@ -247,24 +263,17 @@
         muted={!marketStats?.rank}
       />
       <StatTile
-        label="Liquidity"
-        value={usdCompact(overview.liquidityUsd)}
-        hint="{overview.pairs.length} pools"
+        label="24h Trades"
+        value={count((activity?.h24.buys ?? 0) + (activity?.h24.sells ?? 0))}
+        hint="{count(activity?.h24.buys ?? 0)} buys · {count(activity?.h24.sells ?? 0)} sells"
       />
       <StatTile
-        label="24h Volume"
-        value={usdCompact(activity?.h24.volumeUsd ?? 0)}
-        hint="{count(activity?.h24.buys ?? 0)} / {count(activity?.h24.sells ?? 0)}"
-      />
-      <StatTile
-        label="Holders"
+        label="Holders found"
         value={holdersLive
           ? `${count(snapshot.totalHolders ?? 0)}${holderIndexPartial ? '+' : ''}`
           : '—'}
         hint={holdersLive
-          ? holderIndexPartial
-            ? 'indexed so far'
-            : 'unique wallets'
+          ? `${count(snapshot.distribution?.rankedCount ?? 0)} ranked below`
           : 'indexer not configured'}
         muted={!holdersLive}
       />
