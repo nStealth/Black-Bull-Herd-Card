@@ -61,6 +61,76 @@ async function quote(
   }
 }
 
+export interface SingleQuote {
+  usd: number;
+  side: 'buy' | 'sell';
+  impactPct: number | null;
+  /** Tokens received on a buy, dollars received on a sell. */
+  outAmount: number | null;
+  /** Venues the router would split across, in order. */
+  route: string[];
+}
+
+/**
+ * Quote one arbitrary size, for the calculator.
+ *
+ * Separate from the ladder because the ladder is four fixed rungs cached as a
+ * unit, while this answers whatever a visitor typed. The route is returned too:
+ * knowing a trade would split across three venues explains a slippage number
+ * far better than the number alone.
+ */
+export async function getSingleQuote(
+  mint: string,
+  decimals: number,
+  priceUsd: number,
+  usd: number,
+  side: 'buy' | 'sell'
+): Promise<SingleQuote | null> {
+  if (!(priceUsd > 0) || !(usd > 0)) return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    const [inputMint, outputMint, rawAmount, outDecimals] =
+      side === 'buy'
+        ? [USDC_MINT, mint, BigInt(Math.round(usd * 10 ** USDC_DECIMALS)), decimals]
+        : [
+            mint,
+            USDC_MINT,
+            BigInt(Math.round((usd / priceUsd) * 10 ** decimals)),
+            USDC_DECIMALS
+          ];
+
+    const url = `${ENDPOINT}?inputMint=${inputMint}&outputMint=${outputMint}&amount=${rawAmount}&slippageBps=100`;
+    const res = await fetch(url, { signal: controller.signal, headers: { accept: 'application/json' } });
+    if (!res.ok) return null;
+
+    const body = (await res.json()) as QuoteResponse & {
+      routePlan?: { swapInfo?: { label?: string } }[];
+    };
+    if (body.error || !body.outAmount) return null;
+
+    const impact = Number(body.priceImpactPct);
+    const labels = (body.routePlan ?? [])
+      .map((step) => step.swapInfo?.label)
+      .filter((l): l is string => Boolean(l));
+
+    return {
+      usd,
+      side,
+      impactPct: Number.isFinite(impact) ? impact * 100 : null,
+      outAmount: Number(body.outAmount) / 10 ** outDecimals,
+      // The same venue can appear twice in a split route; show each once.
+      route: [...new Set(labels)]
+    };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /**
  * Probe both sides of the book at a ladder of notional sizes.
  *

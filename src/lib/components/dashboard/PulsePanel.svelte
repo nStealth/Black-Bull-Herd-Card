@@ -30,6 +30,62 @@
 
   $: pace = pulse?.volumePace ?? null;
   $: shift = pulse?.buyShareShift ?? null;
+
+  /**
+   * Turnover with a band attached.
+   *
+   * A bare "2.76×" asks the reader to already know what normal looks like.
+   * These thresholds are stated rather than derived — they are conventions for
+   * reading turnover, not measurements — so the band is a label on the number,
+   * never a substitute for it.
+   */
+  function band(
+    value: number | null,
+    low: number,
+    high: number,
+    words: [string, string, string]
+  ): { band: string; tone: string; fill: number } | null {
+    if (value === null) return null;
+    if (value < low) return { band: words[0], tone: 'var(--d-text-3)', fill: (value / high) * 100 };
+    if (value < high)
+      return { band: words[1], tone: 'var(--d-text-2)', fill: (value / high) * 100 };
+    return { band: words[2], tone: 'var(--d-accent-ink)', fill: 100 };
+  }
+
+  $: liqBand = band(pulse?.liquidityTurnover ?? null, 0.5, 3, ['Thin', 'Active', 'Heavy']);
+  $: capBand = band(
+    pulse?.marketCapTurnover === null || pulse?.marketCapTurnover === undefined
+      ? null
+      : pulse.marketCapTurnover * 100,
+    1,
+    10,
+    ['Quiet', 'Normal', 'Elevated']
+  );
+
+  $: turnoverCells = pulse
+    ? [
+        {
+          key: 'liq',
+          label: 'Liquidity turnover',
+          value:
+            pulse.liquidityTurnover === null ? '—' : `${pulse.liquidityTurnover.toFixed(2)}×`,
+          meta: 'pool depth traded per day',
+          band: liqBand?.band ?? null,
+          tone: liqBand?.tone ?? 'var(--d-text-3)',
+          fill: liqBand ? Math.min(100, liqBand.fill) : null
+        },
+        {
+          key: 'cap',
+          label: 'Cap turnover',
+          value:
+            pulse.marketCapTurnover === null ? '—' : pct(pulse.marketCapTurnover * 100, 2),
+          meta: 'of market cap per day',
+          band: capBand?.band ?? null,
+          tone: capBand?.tone ?? 'var(--d-text-3)',
+          fill: capBand ? Math.min(100, capBand.fill) : null
+        }
+      ]
+    : [];
 </script>
 
 <section class="d-card overflow-hidden">
@@ -120,26 +176,30 @@
       </div>
     {/if}
 
-    <!-- Turnover -->
+    <!-- Turnover, with the band each figure falls in -->
     <div class="grid grid-cols-2 border-t" style="border-color: var(--d-border);">
-      <div class="px-5 py-3.5">
-        <p class="d-label">Liquidity turnover</p>
-        <p class="d-numeric mt-1 text-sm font-semibold" style="color: var(--d-text);">
-          {pulse.liquidityTurnover === null ? '—' : `${pulse.liquidityTurnover.toFixed(2)}×`}
-        </p>
-        <p class="mt-0.5 text-[0.625rem]" style="color: var(--d-text-3);">
-          pool depth traded per day
-        </p>
-      </div>
-      <div class="px-5 py-3.5" style="border-left: 1px solid var(--d-border);">
-        <p class="d-label">Cap turnover</p>
-        <p class="d-numeric mt-1 text-sm font-semibold" style="color: var(--d-text);">
-          {pulse.marketCapTurnover === null ? '—' : pct(pulse.marketCapTurnover * 100, 2)}
-        </p>
-        <p class="mt-0.5 text-[0.625rem]" style="color: var(--d-text-3);">
-          of market cap per day
-        </p>
-      </div>
+      {#each turnoverCells as cell (cell.key)}
+        <div
+          class="px-5 py-3.5"
+          style="border-left: {cell.key === 'cap' ? '1px solid var(--d-border)' : 'none'};"
+        >
+          <p class="d-label">{cell.label}</p>
+          <p class="d-numeric mt-1 text-sm font-semibold" style="color: var(--d-text);">
+            {cell.value}
+          </p>
+          {#if cell.fill !== null}
+            <div class="mt-1.5 h-1 overflow-hidden rounded-full" style="background: var(--d-bg-subtle);">
+              <div
+                class="h-full rounded-full transition-[width] duration-500"
+                style="width: {cell.fill}%; background: {cell.tone};"
+              />
+            </div>
+          {/if}
+          <p class="mt-1 text-[0.625rem]" style="color: var(--d-text-3);">
+            {#if cell.band}<span style="color: {cell.tone};">{cell.band}</span> · {/if}{cell.meta}
+          </p>
+        </div>
+      {/each}
     </div>
   {:else}
     <div class="flex flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">

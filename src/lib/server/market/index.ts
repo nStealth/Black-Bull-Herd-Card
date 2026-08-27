@@ -16,7 +16,7 @@ import {
 } from './geckoterminal';
 import { buildTradeFlow } from './flow';
 import { getSupply, holdersAvailable, indexHolders, type HolderIndex } from './holders';
-import { getDepthLadder } from './jupiter';
+import { getDepthLadder, getSingleQuote, type SingleQuote } from './jupiter';
 import { getSolBenchmark } from './benchmark';
 import { getPeerComparison } from './peers';
 import { buildPulse, buildRhythm } from './pulse';
@@ -273,6 +273,38 @@ async function loadPeers(): Promise<PeerComparison | null> {
       }
     },
     { staleTtlSec: STALE.peers }
+  );
+}
+
+/**
+ * Quote one size on demand. Rounded to a coarse bucket for the cache key so a
+ * slider dragged across a range does not mint a new router call per pixel.
+ */
+export async function loadQuote(usd: number, side: 'buy' | 'sell'): Promise<SingleQuote | null> {
+  const [market, supply] = await Promise.all([loadMarket(), loadSupply()]);
+  const priceUsd = market?.overview.priceUsd ?? 0;
+  if (!priceUsd) return null;
+
+  const bucket = Math.round(usd / 100) * 100;
+
+  return cached(
+    `dash:quote:${side}:${bucket}:v1`,
+    30,
+    async () => {
+      try {
+        return await getSingleQuote(
+          ANSEM_MINT,
+          supply?.decimals ?? DEFAULT_DECIMALS,
+          priceUsd,
+          usd,
+          side
+        );
+      } catch (error) {
+        console.error('[market] single quote failed:', error);
+        return null;
+      }
+    },
+    { staleTtlSec: 300 }
   );
 }
 
