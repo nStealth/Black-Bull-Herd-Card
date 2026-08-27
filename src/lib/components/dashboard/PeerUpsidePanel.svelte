@@ -38,11 +38,19 @@
 
   $: rows = peers
     ? peers.peers.map((coin) => {
-        const mult = coin.marketCapUsd / peers.ansem.marketCapUsd;
+        // Derived from the target price rather than from the two market caps.
+        // Both routes should give the same answer, but CoinGecko samples price,
+        // supply and market cap moments apart, so cap/cap and price/price drift
+        // ~0.2% from each other. Taking both from the target price keeps the
+        // two numbers on screen exactly consistent — anyone dividing the
+        // printed target by the printed current price lands on the printed
+        // multiple, which is the whole point of showing the arithmetic.
+        const targetPrice = coin.marketCapUsd / peers.ansem.circulatingSupply;
+        const mult = targetPrice / peers.ansem.priceUsd;
         return {
           ...coin,
           mult,
-          targetPrice: coin.marketCapUsd / peers.ansem.circulatingSupply,
+          targetPrice,
           futureValue: amount * mult,
           // ANSEM's cap as a share of the peer's, for the bar.
           sharePct: (peers.ansem.marketCapUsd / coin.marketCapUsd) * 100
