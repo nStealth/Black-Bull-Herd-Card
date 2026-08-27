@@ -1,12 +1,16 @@
 <script lang="ts">
-  // Contract safety checks, read from the mint account and the launchpad state.
+  // Contract-level safety, read from the mint account and the launchpad state.
   //
   // Deliberately not a score. Each row is a fact with its source, because a
   // single number invites trusting the number instead of the check. Anything we
   // could not read renders as unknown rather than defaulting to a pass.
+  //
+  // Scope is the contract, not the holder base. Distribution lives in its own
+  // panel, and the counter below says "contract checks" so four passes are not
+  // read as a verdict on the token as a whole.
 
   import type { SecurityInfo } from '$lib/dashboard/types';
-  import { pct, shortAddress, usdCompact } from '$lib/dashboard/format';
+  import { shortAddress, usdCompact } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
 
   export let security: SecurityInfo | null;
@@ -20,29 +24,7 @@
     verdict: Verdict;
   }
 
-  /** Concentration thresholds for a single non-pool wallet. */
-  const TOP_HOLDER_WARN = 5;
-  const TOP_HOLDER_FAIL = 15;
   const LIQUIDITY_WARN_USD = 50_000;
-
-  function topHolderCheck(topHolderPct: number | null): Check {
-    if (topHolderPct === null) {
-      return {
-        key: 'concentration',
-        label: 'Holder concentration',
-        detail: 'Requires an indexing provider',
-        verdict: 'unknown'
-      };
-    }
-
-    return {
-      key: 'concentration',
-      label: 'Holder concentration',
-      detail: `Largest non-pool wallet holds ${pct(topHolderPct, 2)}`,
-      verdict:
-        topHolderPct >= TOP_HOLDER_FAIL ? 'fail' : topHolderPct >= TOP_HOLDER_WARN ? 'warn' : 'pass'
-    };
-  }
 
   function graduationCheck(info: SecurityInfo): Check {
     if (info.graduated === null) {
@@ -96,8 +78,7 @@
           detail: `${usdCompact(security.liquidityUsd)} across tracked pools`,
           verdict: security.liquidityUsd >= LIQUIDITY_WARN_USD ? 'pass' : 'warn'
         },
-        graduationCheck(security),
-        topHolderCheck(security.topHolderPct)
+        graduationCheck(security)
       ] satisfies Check[])
     : [];
 
@@ -122,7 +103,7 @@
     </h2>
     {#if security}
       <span class="d-numeric text-[0.6875rem]" style="color: var(--d-text-3);">
-        {passed}/{measured} pass
+        {passed}/{measured} contract checks
       </span>
     {/if}
   </header>
