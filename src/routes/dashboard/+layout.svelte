@@ -10,8 +10,16 @@
   import ThemeToggle from '$lib/components/dashboard/ThemeToggle.svelte';
   import SocialGlyph from '$lib/components/ui/SocialGlyph.svelte';
   import { OFFICIAL_LINKS, CREATOR_LINKS } from '$lib/social';
+  import { heroPassed, ticker } from '$lib/dashboard/ticker';
+  import { usd } from '$lib/dashboard/format';
 
   const SITE = 'https://ansemherd.online';
+
+  // Once the hero scrolls past, the header carries the price instead of just
+  // the wordmark. On a phone the hero is the whole first screen, so without
+  // this the number is gone for the entire rest of the page.
+  $: pinned = $heroPassed && $ticker !== null;
+  $: up = ($ticker?.changePct ?? 0) >= 0;
 
   /**
    * Structured data for the dashboard branch.
@@ -71,14 +79,42 @@
         >
           ◈
         </div>
-        <span class="text-sm font-semibold tracking-tight" style="color: var(--d-text);">
+        <span
+          class="text-sm font-semibold tracking-tight {pinned ? 'max-md:hidden' : ''}"
+          style="color: var(--d-text);"
+        >
           ANSEM Analytics
         </span>
         <span
-          class="rounded px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wider"
+          class="rounded px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wider {pinned
+            ? 'max-md:hidden'
+            : ''}"
           style="background: var(--d-accent-soft); color: var(--d-accent-ink);"
         >
           Solana
+        </span>
+
+        <!-- Echoed price, hidden until the hero is out of view. On a phone
+             it has to leave the flow entirely rather than just go transparent,
+             or its width pushes the nav off a 375px header. -->
+        <span
+          class="flex items-baseline gap-1.5 transition-all duration-200 {pinned
+            ? ''
+            : 'pointer-events-none max-md:hidden -translate-y-1 opacity-0'}"
+          data-testid="header-ticker"
+          aria-hidden={!pinned}
+        >
+          <span class="d-numeric text-sm font-bold" style="color: var(--d-text);">
+            {$ticker ? usd($ticker.priceUsd, 4) : ''}
+          </span>
+          {#if $ticker?.changePct != null}
+            <span
+              class="d-numeric text-[0.6875rem] font-bold"
+              style="color: {up ? 'var(--d-up)' : 'var(--d-down)'};"
+            >
+              {up ? '▲' : '▼'}{Math.abs($ticker.changePct).toFixed(1)}%
+            </span>
+          {/if}
         </span>
       </div>
 

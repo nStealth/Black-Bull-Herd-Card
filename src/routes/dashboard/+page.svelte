@@ -5,6 +5,7 @@
 
   import { ageSince, compact, count, pct, relativeAge, usd, usdCompact } from '$lib/dashboard/format';
   import { ANSEM_MINT } from '$lib/tiers';
+  import { heroPassed, ticker } from '$lib/dashboard/ticker';
 
   import CryptoBackground from '$lib/components/dashboard/CryptoBackground.svelte';
   import StatTile from '$lib/components/dashboard/StatTile.svelte';
@@ -153,14 +154,37 @@
     }
   }
 
+  // Feed the header its copy of the headline, so it can show the price once
+  // the hero is gone.
+  $: ticker.set(
+    overview ? { priceUsd: overview.priceUsd, changePct: activity?.h24.priceChangePct ?? null } : null
+  );
+
+  // A zero-height marker sitting under the hero. Once it leaves the area below
+  // the header, the hero is off screen and the header takes over the price.
+  let sentinel: HTMLElement;
+  let observer: IntersectionObserver | undefined;
+
   onMount(() => {
     timer = setInterval(refresh, REFRESH_MS);
     clock = setInterval(() => (now = Date.now()), 1000);
+
+    if (sentinel && typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(
+        ([entry]) => heroPassed.set(!entry.isIntersecting && entry.boundingClientRect.top < 0),
+        { rootMargin: '-56px 0px 0px 0px', threshold: 0 }
+      );
+      observer.observe(sentinel);
+    }
   });
 
   onDestroy(() => {
     clearInterval(timer);
     clearInterval(clock);
+    observer?.disconnect();
+    // The header is shared with /about, /docs and /api, which have no hero.
+    heroPassed.set(false);
+    ticker.set(null);
   });
 </script>
 
@@ -253,6 +277,7 @@
     <div class="mb-3">
       <PriceHero {overview} {activity} />
     </div>
+    <div bind:this={sentinel} aria-hidden="true"></div>
 
     <!-- Everything that qualifies the headline, at secondary weight -->
     <div class="mb-4 grid grid-cols-5 gap-3 max-xl:grid-cols-4 max-lg:grid-cols-2">
