@@ -125,15 +125,18 @@
     --d-text-3: #67717d; /* AA on white, surface-2 and bg-subtle; #8b95a1 was 3.04:1 */
     --d-accent: #00a862;
     /* Text-safe accent. #00a862 reads 3.10:1 on white — fine as a fill behind
-       a bar, not fine as a word. Used wherever the accent carries text. */
-    --d-accent-ink: #00804a;
+       a bar, not fine as a word. Used wherever the accent carries text.
+       #00804a was the first attempt and clears AA on plain white, but almost
+       every use sits on an accent-tinted chip rather than on white, and on
+       that wash it fell to 4.4:1. Measured against the tint, not the page. */
+    --d-accent-ink: #006637;
     --d-accent-soft: rgba(0, 168, 98, 0.08);
     /* Caution colour for text. #d99a2d was 2.44:1 on white. */
     --d-warn-ink: #a3651a;
     /* Darkened from #00a862 and #d92d20, which read 2.86:1 and 4.46:1 against
        the palest surface — both of these carry numbers, not just bar fills, and
        every positive figure on the dashboard was below AA in light mode. */
-    --d-up: #00804a;
+    --d-up: #006637; /* on its own 12% wash, #00804a read 4.15:1 */
     --d-down: #c62a1e;
     --d-shadow: 0 1px 2px rgba(15, 20, 25, 0.04), 0 1px 3px rgba(15, 20, 25, 0.06);
     --d-shadow-lg: 0 4px 12px rgba(15, 20, 25, 0.06);

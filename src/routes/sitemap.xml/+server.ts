@@ -20,7 +20,6 @@ const PAGES: Entry[] = [
   { path: '/dashboard/docs', changefreq: 'weekly', priority: '0.8' },
   { path: '/dashboard/about', changefreq: 'weekly', priority: '0.7' },
   { path: '/', changefreq: 'monthly', priority: '0.5' },
-  { path: '/rules', changefreq: 'monthly', priority: '0.3' }
 ];
 
 export const GET: RequestHandler = async ({ setHeaders }) => {
