@@ -19,7 +19,6 @@ const PAGES: Entry[] = [
   { path: '/dashboard', changefreq: 'hourly', priority: '1.0' },
   { path: '/dashboard/docs', changefreq: 'weekly', priority: '0.8' },
   { path: '/dashboard/about', changefreq: 'weekly', priority: '0.7' },
-  { path: '/dashboard/api', changefreq: 'weekly', priority: '0.7' },
   { path: '/', changefreq: 'monthly', priority: '0.5' },
   { path: '/rules', changefreq: 'monthly', priority: '0.3' }
 ];

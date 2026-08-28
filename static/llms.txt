@@ -20,18 +20,8 @@ coverage it actually reached.
   stops being reliable.
 - [About](https://ansemherd.online/dashboard/about): What the dashboard
   tracks and why each panel is measured the way it is.
-- [API](https://ansemherd.online/dashboard/api): Free read-only JSON
-  endpoints, no key required, CORS enabled.
 - [Campaign](https://ansemherd.online/): The Black Bull Herd Card NFT
   campaign, which closed on 17 August 2026.
-
-## API
-
-- `GET /api/dashboard/snapshot`: Everything on the dashboard in one payload.
-- `GET /api/dashboard/chart?range=1h|24h|7d|30d|all`: OHLCV candles.
-- `GET /api/dashboard/trades`: Recent swaps above $250.
-- `GET /api/dashboard/holders?page=1&pageSize=50`: Ranked holder list.
-- `GET /api/dashboard/rank/{wallet}`: One wallet's position among all holders.
 
 ## Data sources
 

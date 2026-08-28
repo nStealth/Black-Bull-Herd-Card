@@ -347,13 +347,6 @@
       >
         ← Back to the dashboard
       </a>
-      <a
-        href="/dashboard/api"
-        class="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:bg-[var(--d-hover)]"
-        style="border-color: var(--d-border); color: var(--d-text);"
-      >
-        API reference →
-      </a>
     </div>
   </main>
 </div>

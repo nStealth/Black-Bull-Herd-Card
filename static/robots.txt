@@ -3,9 +3,8 @@
 User-agent: *
 Allow: /
 
-# The API is open and documented at /dashboard/api, but crawling it wastes
-# everyone's time: every route is cached and returns numbers that change by
-# the second. Read the pages instead.
+# The JSON routes exist for this site's own pages and are not offered for
+# general use. Read the pages instead.
 Disallow: /api/
 
 Sitemap: https://ansemherd.online/sitemap.xml
