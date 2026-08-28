@@ -10,11 +10,57 @@
   import { compact, count, pct, shortAddress, usd, usdCompact } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
   import { SOURCES } from '$lib/dashboard/sources';
+  import { watchlist, WATCHLIST_MAX, type SavedWallet } from '$lib/dashboard/watchlist';
 
   let address = '';
   let result: WalletRank | null = null;
   let error = '';
   let loading = false;
+  let saving = false;
+
+  /**
+   * The saved list lives in this browser, because the site has no accounts and
+   * a server-held list would have nobody to belong to — every visitor would
+   * see every other visitor's wallets. The address is also posted to the
+   * server so the project has a record of which wallets people follow; that
+   * record is per-address, and carries nothing about who saved it.
+   */
+  $: saved = $watchlist;
+  $: isSaved = result ? saved.some((w) => w.address === result?.wallet) : false;
+  $: previous = result ? saved.find((w) => w.address === result?.wallet) : undefined;
+  $: rankDelta =
+    previous && previous.rank !== null && result?.rank != null ? previous.rank - result.rank : null;
+
+  async function save() {
+    if (!result || saving) return;
+    saving = true;
+
+    const entry: SavedWallet = {
+      address: result.wallet,
+      rank: result.rank,
+      balance: result.balance,
+      seenAt: Date.now()
+    };
+
+    try {
+      await fetch('/api/dashboard/watch', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ wallet: result.wallet })
+      });
+    } catch {
+      // The visitor's own list is the thing they asked for; it should not fail
+      // because our record-keeping did.
+    } finally {
+      watchlist.save(entry);
+      saving = false;
+    }
+  }
+
+  function recall(wallet: string) {
+    address = wallet;
+    lookup();
+  }
 
   /** Same shape check the server runs, so obvious typos never leave the page. */
   function looksValid(value: string): boolean {
@@ -60,6 +106,14 @@
     address = '';
     result = null;
     error = '';
+  }
+
+  function ago(ms: number): string {
+    const days = Math.floor((Date.now() - ms) / 86_400_000);
+    if (days >= 1) return `${days}d ago`;
+    const hours = Math.floor((Date.now() - ms) / 3_600_000);
+    if (hours >= 1) return `${hours}h ago`;
+    return 'just now';
   }
 
   /**
@@ -120,9 +174,79 @@
     <p class="px-5 pb-4 text-[0.6875rem]" style="color: var(--d-down);">{error}</p>
   {/if}
 
+  {#if saved.length > 0}
+    <div class="flex flex-wrap items-center gap-1.5 px-5 pb-4">
+      <span class="d-label mr-0.5">Saved</span>
+      {#each saved as w (w.address)}
+        <span
+          class="flex items-center gap-1 rounded-lg border px-2 py-1"
+          style="border-color: var(--d-border); background: var(--d-bg-subtle);"
+        >
+          <button
+            type="button"
+            class="d-numeric d-tap text-[0.6875rem] font-semibold"
+            style="color: var(--d-text);"
+            title="Look this wallet up again"
+            on:click={() => recall(w.address)}
+          >
+            {shortAddress(w.address, 4, 4)}
+            <span class="font-normal" style="color: var(--d-text-3);">
+              {w.rank === null ? 'unranked' : `#${count(w.rank)}`}
+            </span>
+          </button>
+          <button
+            type="button"
+            class="d-tap text-[0.6875rem] leading-none"
+            style="color: var(--d-text-3);"
+            aria-label="Remove {shortAddress(w.address, 4, 4)} from saved wallets"
+            on:click={() => watchlist.remove(w.address)}
+          >
+            ×
+          </button>
+        </span>
+      {/each}
+      <span class="text-[0.625rem]" style="color: var(--d-text-3);">
+        kept in this browser · {saved.length}/{WATCHLIST_MAX}
+      </span>
+    </div>
+  {/if}
+
   {#if result}
     {@const hasRank = result.rank !== null}
     <div class="border-t" style="border-color: var(--d-border);">
+      <div
+        class="flex flex-wrap items-center justify-between gap-2 border-b px-5 py-2"
+        style="border-color: var(--d-border);"
+      >
+        {#if previous}
+          <span class="text-[0.6875rem]" style="color: var(--d-text-3);">
+            {#if rankDelta !== null && rankDelta !== 0}
+              <span style="color: {rankDelta > 0 ? 'var(--d-up)' : 'var(--d-down)'};">
+                {rankDelta > 0 ? '▲' : '▼'} {count(Math.abs(rankDelta))} places
+              </span>
+              since you saved it {ago(previous.seenAt)}
+            {:else}
+              Saved {ago(previous.seenAt)} · same rank since
+            {/if}
+          </span>
+        {:else}
+          <span class="text-[0.6875rem]" style="color: var(--d-text-3);">
+            Save it to see what changes next time you check.
+          </span>
+        {/if}
+
+        <button
+          type="button"
+          class="d-tap shrink-0 rounded-lg border px-2.5 py-1 text-[0.6875rem] font-semibold transition-colors hover:bg-[var(--d-hover)] disabled:opacity-40"
+          style="border-color: var(--d-border); color: {isSaved
+            ? 'var(--d-accent)'
+            : 'var(--d-text-2)'};"
+          disabled={saving}
+          on:click={save}
+        >
+          {saving ? 'Saving…' : isSaved ? '★ Update saved' : '☆ Save wallet'}
+        </button>
+      </div>
       <!-- Headline: rank and percentile -->
       <div
         class="flex flex-wrap items-center justify-between gap-3 px-5 py-4"

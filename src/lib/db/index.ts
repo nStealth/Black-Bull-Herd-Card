@@ -1,10 +1,12 @@
 // Database connection and operations
 // NeonDB Postgres with Drizzle ORM + In-memory Map fallback
 
+import { env } from '$env/dynamic/private';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { eq, isNotNull } from 'drizzle-orm';
-import { herdEntries, type HerdEntry, type NewHerdEntry } from './schema';
+import { herdEntries, watchedWallets, type HerdEntry, type NewHerdEntry } from './schema';
+import { sql } from 'drizzle-orm';
 
 // In-memory fallback for development without DB
 const memoryStore = new Map<string, HerdEntry>();
@@ -22,7 +24,10 @@ function initDb() {
 
   // Server-side: try to connect to NeonDB
   try {
-    const databaseUrl = process.env.DATABASE_URL;
+    // $env/dynamic/private, not process.env: the latter does not read .env in
+    // dev, so a correctly configured local database would silently fall back
+    // to the in-memory store and look broken.
+    const databaseUrl = env.DATABASE_URL;
     
     if (!databaseUrl) {
       console.warn('DATABASE_URL not set, using in-memory fallback');
@@ -195,5 +200,62 @@ export async function getSubmittedCount(): Promise<number> {
     return result.length;
   } catch {
     return 0;
+  }
+}
+
+/**
+ * Record that somebody asked to follow a wallet.
+ *
+ * Fire-and-forget from the caller's point of view: a visitor saving an address
+ * to their own list must not fail because the database is unreachable, so this
+ * reports success or failure and never throws.
+ *
+ * Nothing about the visitor is written — see the table comment in schema.ts.
+ */
+export async function saveWatchedWallet(entry: {
+  wallet: string;
+  rank: number | null;
+  balance: number;
+  percentSupply: number;
+  tierId: string | null;
+}): Promise<{ stored: boolean }> {
+  if (useMemoryFallback || !db) return { stored: false };
+
+  try {
+    await db
+      .insert(watchedWallets)
+      .values({
+        wallet: entry.wallet,
+        rank: entry.rank,
+        balance: entry.balance,
+        percentSupply: entry.percentSupply,
+        tierId: entry.tierId
+      })
+      .onConflictDoUpdate({
+        target: watchedWallets.wallet,
+        set: {
+          rank: entry.rank,
+          balance: entry.balance,
+          percentSupply: entry.percentSupply,
+          tierId: entry.tierId,
+          saves: sql`${watchedWallets.saves} + 1`,
+          lastSavedAt: new Date()
+        }
+      });
+    return { stored: true };
+  } catch (error) {
+    console.error('Error saving watched wallet:', error);
+    return { stored: false };
+  }
+}
+
+/** How many distinct wallets have been saved. Null when there is no database. */
+export async function watchedWalletCount(): Promise<number | null> {
+  if (useMemoryFallback || !db) return null;
+  try {
+    const rows = await db.select({ n: sql<number>`count(*)::int` }).from(watchedWallets);
+    return rows[0]?.n ?? 0;
+  } catch {
+    return null;
   }
 }
