@@ -251,7 +251,7 @@
         </div>
         <button
           type="button"
-          class="d-numeric mt-1 flex items-center gap-1.5 text-[0.6875rem] transition-colors hover:opacity-75"
+          class="d-tap d-numeric mt-1 flex items-center gap-1.5 text-[0.6875rem] transition-colors hover:opacity-75"
           style="color: var(--d-text-3);"
           on:click={copyMint}
         >
