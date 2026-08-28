@@ -67,6 +67,7 @@
   </header>
 
   {#if benchmark}
+    <div class="flex flex-1 flex-col justify-around">
     {#each rows as row, i (row.key)}
       {@const gap = row.token !== null && row.bench !== null ? row.token - row.bench : null}
       <div class="px-5 py-3.5" style="border-top: {i === 0 ? 'none' : '1px solid var(--d-border)'};">
@@ -109,8 +110,9 @@
         {/each}
       </div>
     {/each}
+    </div>
   {:else}
-    <div class="flex flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">
+    <div class="flex flex-1 flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">
       <p class="text-sm font-medium" style="color: var(--d-text);">Benchmark unavailable</p>
       <p class="max-w-xs text-[0.6875rem]" style="color: var(--d-text-3);">
         CoinGecko did not return SOL's history on this refresh.

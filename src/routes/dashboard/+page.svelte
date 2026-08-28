@@ -282,7 +282,12 @@
     <div bind:this={sentinel} aria-hidden="true"></div>
 
     <!-- Everything that qualifies the headline, at secondary weight -->
-    <div class="mb-4 grid grid-cols-5 gap-3 max-xl:grid-cols-4 max-lg:grid-cols-2">
+    <!--
+      Eight tiles, not seven. Seven is prime: at five columns it left three dead
+      slots, at four it left one, at two it left one. Eight divides by four and
+      by two, so the block is a filled rectangle at every breakpoint.
+    -->
+    <div class="mb-4 grid grid-cols-4 gap-3 max-lg:grid-cols-2">
       <StatTile
         label="Rank"
         value={marketStats?.rank ? `#${marketStats.rank}` : '—'}
@@ -318,6 +323,14 @@
           : '—'}
         hint={marketStats?.ath ? `ATH ${usd(marketStats.ath, 4)}` : 'all-time high'}
         muted={marketStats?.athChangePct == null}
+      />
+      <StatTile
+        label="30d Change"
+        value={marketStats?.change30dPct != null
+          ? `${marketStats.change30dPct >= 0 ? '+' : ''}${marketStats.change30dPct.toFixed(1)}%`
+          : '—'}
+        hint="vs 30 days ago"
+        muted={marketStats?.change30dPct == null}
       />
       <StatTile
         label="Market Age"

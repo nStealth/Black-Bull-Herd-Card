@@ -189,11 +189,42 @@
 }
 
 @layer components {
+  /*
+    Cards fill their grid cell rather than sitting at their natural height.
+
+    Panels are laid out in rows, and two panels in a row rarely have the same
+    amount to say. Without this the shorter one kept its own height and the
+    rest of the row it had been stretched to became a hole in the page — 189px
+    of nothing under Risk Profile, 88px under Wallet Flow. Filling the cell
+    moves that space inside the card, where the panel's own layout can spend
+    it; `d-card-body` below is how a panel opts into spreading its content
+    through the space rather than leaving it at the bottom.
+
+    In normal flow, height:100% of an auto-height parent resolves to auto, so
+    this changes nothing for cards that are not grid items.
+  */
   .d-card {
     background: var(--d-surface);
     border: 1px solid var(--d-border);
     border-radius: 12px;
     box-shadow: var(--d-shadow);
+    height: 100%;
+
+    /*
+      A column, so any region inside a panel can claim the leftover height with
+      `flex-1`. Children of a flex column stack and stretch exactly as blocks
+      do, so this costs nothing for the panels that do not use it.
+    */
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* The region of a panel that spreads its rows through the spare height. */
+  .d-card-body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
 
   /*

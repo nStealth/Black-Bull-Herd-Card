@@ -50,7 +50,7 @@
   </header>
 
   {#if rhythm && peak > 0}
-    <div class="px-5 py-4">
+    <div class="flex flex-1 flex-col justify-center px-5 py-4">
       <div class="flex h-24 items-end gap-[2px]" role="img" aria-label="Volume by hour of day">
         {#each rhythm.hours as volume, hour (hour)}
           {@const isPeak = hour === rhythm.peakHourUtc}
@@ -109,7 +109,7 @@
       </div>
     </div>
   {:else}
-    <div class="flex flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">
+    <div class="flex flex-1 flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">
       <p class="text-sm font-medium" style="color: var(--d-text);">Rhythm unavailable</p>
       <p class="max-w-xs text-[0.6875rem]" style="color: var(--d-text-3);">
         Needs at least a day of hourly candles.

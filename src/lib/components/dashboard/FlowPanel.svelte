@@ -83,7 +83,7 @@
     </div>
 
     <!-- Movers -->
-    <div class="grid grid-cols-2 max-md:grid-cols-1">
+    <div class="grid flex-1 auto-rows-fr grid-cols-2 max-md:grid-cols-1">
       {#each sides as side, i (side.key)}
         <div
           class="px-5 py-3.5"
@@ -141,7 +141,7 @@
       </div>
     </div>
   {:else}
-    <div class="flex flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">
+    <div class="flex flex-1 flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">
       <p class="text-sm font-medium" style="color: var(--d-text);">Flow unavailable</p>
       <p class="max-w-xs text-[0.6875rem]" style="color: var(--d-text-3);">
         The trade tape did not load on this refresh.

@@ -207,7 +207,7 @@
       any of these caps would require sustained demand that may never arrive.
     </p>
   {:else}
-    <div class="flex flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">
+    <div class="flex flex-1 flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">
       <p class="text-sm font-medium" style="color: var(--d-text);">Comparison unavailable</p>
       <p class="max-w-xs text-[0.6875rem]" style="color: var(--d-text-3);">
         CoinGecko did not return peer market caps on this refresh.

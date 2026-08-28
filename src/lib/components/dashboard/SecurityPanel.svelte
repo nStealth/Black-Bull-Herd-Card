@@ -110,7 +110,7 @@
   </header>
 
   {#if security}
-    <div>
+    <div class="flex flex-1 flex-col justify-around">
       {#each checks as check, i (check.key)}
         {@const tone = TONE[check.verdict]}
         <div class="px-5 py-3" style="border-top: {i === 0 ? 'none' : '1px solid var(--d-border)'};">
@@ -136,7 +136,7 @@
       {/each}
     </div>
   {:else}
-    <div class="flex flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">
+    <div class="flex flex-1 flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">
       <p class="text-sm font-medium" style="color: var(--d-text);">Safety checks unavailable</p>
       <p class="max-w-xs text-[0.6875rem]" style="color: var(--d-text-3);">
         The mint account could not be read on this refresh.

@@ -56,7 +56,7 @@
   </header>
 
   {#if distribution}
-    <div class="px-5 py-4">
+    <div class="flex flex-1 flex-col justify-around px-5 py-4">
       {#each rows as row (row.label)}
         <div class="mb-3 last:mb-0">
           <div class="flex items-baseline justify-between">
@@ -133,7 +133,10 @@
       </p>
     {/if}
   {:else}
-    <p class="px-5 py-10 text-center text-[0.8125rem]" style="color: var(--d-text-3);">
+    <p
+      class="flex flex-1 items-center justify-center px-5 py-10 text-center text-[0.8125rem]"
+      style="color: var(--d-text-3);"
+    >
       Unlocks with the holder index.
     </p>
   {/if}

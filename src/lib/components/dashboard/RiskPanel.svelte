@@ -87,41 +87,43 @@
   </header>
 
   {#if risk}
-    <div class="grid grid-cols-3 max-md:grid-cols-2">
-      {#each cells as cell, i (cell.key)}
-        <div
-          class="px-5 py-3.5"
-          style="border-top: {i > 2 ? '1px solid var(--d-border)' : 'none'};
-                 border-left: {i % 3 !== 0 ? '1px solid var(--d-border)' : 'none'};"
-        >
-          <p class="d-label">{cell.label}</p>
-          <p class="d-numeric mt-1 text-sm font-semibold" style="color: {cell.color};">
-            {cell.value}
-          </p>
-          <p class="mt-0.5 text-[0.625rem] leading-tight" style="color: var(--d-text-3);">
-            {cell.meta}
-          </p>
-        </div>
-      {/each}
-    </div>
-
-    <div
-      class="flex items-center gap-3 border-t px-5 py-3"
-      style="border-color: var(--d-border);"
-    >
-      <span class="d-label shrink-0">Green days</span>
-      <div class="h-1 flex-1 overflow-hidden rounded-full" style="background: var(--d-bg-subtle);">
-        <div
-          class="h-full rounded-full"
-          style="width: {risk.upDayRatio}%; background: var(--d-up);"
-        />
+    <div class="d-card-body">
+      <div class="grid flex-1 auto-rows-fr grid-cols-3 max-md:grid-cols-2">
+        {#each cells as cell, i (cell.key)}
+          <div
+            class="px-5 py-3.5"
+            style="border-top: {i > 2 ? '1px solid var(--d-border)' : 'none'};
+                   border-left: {i % 3 !== 0 ? '1px solid var(--d-border)' : 'none'};"
+          >
+            <p class="d-label">{cell.label}</p>
+            <p class="d-numeric mt-1 text-sm font-semibold" style="color: {cell.color};">
+              {cell.value}
+            </p>
+            <p class="mt-0.5 text-[0.625rem] leading-tight" style="color: var(--d-text-3);">
+              {cell.meta}
+            </p>
+          </div>
+        {/each}
       </div>
-      <span class="d-numeric shrink-0 text-xs font-semibold" style="color: var(--d-text);">
-        {pct(risk.upDayRatio, 0)}
-      </span>
+
+      <div
+        class="flex items-center gap-3 border-t px-5 py-3"
+        style="border-color: var(--d-border);"
+      >
+        <span class="d-label shrink-0">Green days</span>
+        <div class="h-1 flex-1 overflow-hidden rounded-full" style="background: var(--d-bg-subtle);">
+          <div
+            class="h-full rounded-full"
+            style="width: {risk.upDayRatio}%; background: var(--d-up);"
+          />
+        </div>
+        <span class="d-numeric shrink-0 text-xs font-semibold" style="color: var(--d-text);">
+          {pct(risk.upDayRatio, 0)}
+        </span>
+      </div>
     </div>
   {:else}
-    <div class="flex flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">
+    <div class="flex flex-1 flex-col items-center justify-center gap-1.5 px-5 py-10 text-center">
       <p class="text-sm font-medium" style="color: var(--d-text);">Risk metrics unavailable</p>
       <p class="max-w-xs text-[0.6875rem]" style="color: var(--d-text-3);">
         Not enough price history on this refresh.
