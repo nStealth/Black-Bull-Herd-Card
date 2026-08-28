@@ -9,6 +9,7 @@
   import type { ActivityStats, Benchmark } from '$lib/dashboard/types';
   import { signedPct } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
+  import { SOURCES } from '$lib/dashboard/sources';
 
   export let benchmark: Benchmark | null;
   export let activity: ActivityStats | null;
@@ -58,8 +59,7 @@
       vs Solana
       <InfoTip
         label="vs Solana"
-        text="The token's move next to SOL's over the same window. A token up 60% while the chain is up 28% moved on its own; up 60% while the chain is up 55% mostly went along for the ride. SOL's figures come from CoinGecko's daily closes."
-      />
+        text="The token's move next to SOL's over the same window. A token up 60% while the chain is up 28% moved on its own; up 60% while the chain is up 55% mostly went along for the ride. SOL's figures come from CoinGecko's daily closes." source={SOURCES.coingecko} />
     </h2>
     {#if benchmark}
       <span class="text-[0.6875rem]" style="color: var(--d-text-3);">relative strength</span>

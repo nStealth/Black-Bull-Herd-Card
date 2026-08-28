@@ -11,6 +11,17 @@
   export let text: string;
   /** Accessible name, so screen readers hear which panel this explains. */
   export let label: string;
+  /**
+   * Which provider these numbers came from. Rendered as a footer line so the
+   * answer to "where did this come from" sits on the panel itself rather than
+   * only in the page footer.
+   *
+   * Deliberately not a timestamp: the snapshot is fetched as one unit, so a
+   * per-panel "updated 4s ago" would be the same number repeated sixteen times
+   * dressed up as sixteen measurements. Freshness is reported once, in the
+   * header, where it is true.
+   */
+  export let source = '';
 
   const WIDTH = 260;
   const GAP = 10;
@@ -28,7 +39,7 @@
     const r = trigger.getBoundingClientRect();
 
     // Flip above the trigger when there is not enough room below.
-    const estimatedHeight = 120;
+    const estimatedHeight = source ? 160 : 120;
     above = r.bottom + GAP + estimatedHeight > window.innerHeight;
     y = above ? r.top - GAP : r.bottom + GAP;
 
@@ -95,6 +106,9 @@
     on:mouseleave={scheduleHide}
   >
     {text}
+    {#if source}
+      <span class="info-source">Source: {source}</span>
+    {/if}
   </div>
 {/if}
 
@@ -159,6 +173,16 @@
     text-align: left;
     font-weight: 400;
     animation: tipIn 0.14s ease-out;
+  }
+
+  .info-source {
+    display: block;
+    margin-top: 8px;
+    padding-top: 7px;
+    border-top: 1px solid var(--d-border);
+    color: var(--d-text-3);
+    font-size: 0.625rem;
+    line-height: 1.5;
   }
 
   /* When flipped, `top` is the trigger's top edge, so sit the bubble above it. */

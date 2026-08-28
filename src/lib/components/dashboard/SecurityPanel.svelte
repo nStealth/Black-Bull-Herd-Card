@@ -12,6 +12,7 @@
   import type { SecurityInfo } from '$lib/dashboard/types';
   import { shortAddress, usdCompact } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
+  import { SOURCES } from '$lib/dashboard/sources';
 
   export let security: SecurityInfo | null;
 
@@ -99,7 +100,7 @@
     style="border-color: var(--d-border);"
   >
     <h2 class="text-sm font-semibold" style="color: var(--d-text);">Contract Safety
-      <InfoTip label="Contract Safety" text="Checks read straight from the mint account on-chain. Deliberately a list of facts rather than a single score — a score invites trusting the number instead of the check. Anything we could not read says Unknown rather than defaulting to a pass." />
+      <InfoTip label="Contract Safety" text="Checks read straight from the mint account on-chain. Deliberately a list of facts rather than a single score — a score invites trusting the number instead of the check. Anything we could not read says Unknown rather than defaulting to a pass." source={SOURCES.chain} />
     </h2>
     {#if security}
       <span class="d-numeric text-[0.6875rem]" style="color: var(--d-text-3);">

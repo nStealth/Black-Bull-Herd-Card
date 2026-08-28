@@ -401,7 +401,14 @@
       {overview.pairs.length} Solana pools. Supply, mint authority and freeze authority read
       on-chain from the mint. Candles and the live tape from GeckoTerminal on the deepest pool;
       rank, all-time high/low and the 7d/30d changes from CoinGecko across every venue.
-      {#if !holdersLive}Holder analytics require an indexing provider.{/if}
+      Slippage is quoted per request by the Jupiter router, so those figures are live rather
+      than cached from a snapshot.
+      {#if holdersLive}
+        Holder rankings and distribution come from a Helius token-account walk.
+      {:else}
+        Holder analytics require an indexing provider.
+      {/if}
+      Every panel names its own provider under the marker beside its title.
       Buy/sell counts are published up to 24h only — the 7d and 30d rows carry price and volume
       with counts left blank rather than estimated. When a free-tier provider rate-limits, the
       last good payload is shown rather than a blank panel; the header stamp says how old it is.

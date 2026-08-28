@@ -17,6 +17,7 @@
   import type { PeerComparison } from '$lib/dashboard/types';
   import { usd, usdCompact } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
+  import { SOURCES } from '$lib/dashboard/sources';
 
   export let peers: PeerComparison | null;
 
@@ -71,8 +72,7 @@
         What if $ANSEM reached their market cap?
         <InfoTip
           label="Market cap comparison"
-          text="A hypothetical, not a forecast. Each row takes another meme coin's market cap and divides it by ANSEM's circulating supply to get the price ANSEM would trade at with the same cap. The multiple is that target over today's price. All five coins are read from one source on a circulating-supply basis, so the ratios are comparable."
-        />
+          text="A hypothetical, not a forecast. Each row takes another meme coin's market cap and divides it by ANSEM's circulating supply to get the price ANSEM would trade at with the same cap. The multiple is that target over today's price. All five coins are read from one source on a circulating-supply basis, so the ratios are comparable." source={SOURCES.coingecko} />
       </h2>
       <p class="mt-1 text-xs" style="color: var(--d-text-2);">
         Same market cap, very different price. Every figure below is live.

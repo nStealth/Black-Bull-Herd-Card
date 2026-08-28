@@ -9,6 +9,7 @@
   import type { DepthLadder, DepthStep } from '$lib/dashboard/types';
   import { compact, usd, usdCompact } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
+  import { SOURCES } from '$lib/dashboard/sources';
 
   export let depth: DepthLadder | null;
 
@@ -94,7 +95,7 @@
     style="border-color: var(--d-border);"
   >
     <h2 class="text-sm font-semibold" style="color: var(--d-text);">Trade Depth
-      <InfoTip label="Trade Depth" text="What a market order of each size would actually cost you in slippage, quoted live by the Jupiter router across every Solana venue. This is the question a price chart never answers: whether you can get in — or out — at size." />
+      <InfoTip label="Trade Depth" text="What a market order of each size would actually cost you in slippage, quoted live by the Jupiter router across every Solana venue. This is the question a price chart never answers: whether you can get in — or out — at size." source={SOURCES.jupiter} />
     </h2>
     <span class="text-[0.6875rem]" style="color: var(--d-text-3);">
       live routing · price impact

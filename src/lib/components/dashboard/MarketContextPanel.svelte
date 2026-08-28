@@ -9,6 +9,7 @@
   import type { MarketStats } from '$lib/dashboard/types';
   import { pct, usd, usdCompact } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
+  import { SOURCES } from '$lib/dashboard/sources';
 
   export let market: MarketStats | null;
   export let priceUsd: number;
@@ -76,7 +77,7 @@
     style="border-color: var(--d-border);"
   >
     <h2 class="text-sm font-semibold" style="color: var(--d-text);">Market Context
-      <InfoTip label="Market Context" text="Where this token sits against the wider market rather than just its own pools: rank by market cap, all-time high and low, and the position of the live price inside its 24-hour range." />
+      <InfoTip label="Market Context" text="Where this token sits against the wider market rather than just its own pools: rank by market cap, all-time high and low, and the position of the live price inside its 24-hour range." source={SOURCES.coingecko} />
     </h2>
     {#if market?.rank}
       <span class="d-numeric text-[0.6875rem]" style="color: var(--d-text-3);">

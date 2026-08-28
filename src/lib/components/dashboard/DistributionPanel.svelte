@@ -3,6 +3,7 @@
   import { TIERS } from '$lib/tiers';
   import { count, pct } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
+  import { SOURCES } from '$lib/dashboard/sources';
 
   export let distribution: Distribution | null;
 
@@ -50,7 +51,7 @@
 <section class="d-card overflow-hidden">
   <header class="border-b px-5 py-3.5" style="border-color: var(--d-border);">
     <h2 class="text-sm font-semibold" style="color: var(--d-text);">Supply Distribution
-      <InfoTip label="Supply Distribution" text="How tightly the supply is held. Top 10/50/100 are shares of total supply; the Gini coefficient runs 0 (everyone holds the same) to 1 (one wallet holds everything). Tier counts cover the ranked wallets only." />
+      <InfoTip label="Supply Distribution" text="How tightly the supply is held. Top 10/50/100 are shares of total supply; the Gini coefficient runs 0 (everyone holds the same) to 1 (one wallet holds everything). Tier counts cover the ranked wallets only." source={SOURCES.holders} />
     </h2>
   </header>
 

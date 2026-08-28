@@ -10,6 +10,7 @@
   import type { Candle, ChartRange, PriceSeries } from '$lib/dashboard/types';
   import { usd, usdCompact } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
+  import { SOURCES } from '$lib/dashboard/sources';
 
   export let initial: PriceSeries | null = null;
 
@@ -149,7 +150,7 @@
     style="border-color: var(--d-border);"
   >
     <h2 class="text-sm font-semibold" style="color: var(--d-text);">Price History
-      <InfoTip label="Price History" text="Open/high/low/close candles with a volume strip, taken from the deepest pool — the one hardest to move with a single trade. Hover anywhere on the chart to read the exact price and volume at that moment." />
+      <InfoTip label="Price History" text="Open/high/low/close candles with a volume strip, taken from the deepest pool — the one hardest to move with a single trade. Hover anywhere on the chart to read the exact price and volume at that moment." source={SOURCES.candles} />
     </h2>
 
     <div class="flex gap-0.5" role="group" aria-label="Chart range">

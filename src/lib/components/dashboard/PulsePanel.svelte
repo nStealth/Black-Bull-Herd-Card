@@ -8,6 +8,7 @@
   import type { MarketPulse } from '$lib/dashboard/types';
   import { pct, usdCompact } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
+  import { DERIVED } from '$lib/dashboard/sources';
 
   export let pulse: MarketPulse | null;
 
@@ -97,8 +98,7 @@
       Market Pulse
       <InfoTip
         label="Market Pulse"
-        text="Everything here is measured against the token's own baseline rather than in absolute dollars. Pace compares this hour's volume to the average hour of the last day. Turnover is how many times the pooled liquidity, and what fraction of the market cap, changed hands in 24 hours — heavy turnover on thin liquidity means the token is being traded far harder than it is capitalised."
-      />
+        text="Everything here is measured against the token's own baseline rather than in absolute dollars. Pace compares this hour's volume to the average hour of the last day. Turnover is how many times the pooled liquidity, and what fraction of the market cap, changed hands in 24 hours — heavy turnover on thin liquidity means the token is being traded far harder than it is capitalised." source={DERIVED.fromActivity} />
     </h2>
     {#if pace !== null}
       <span class="text-[0.6875rem]" style="color: var(--d-text-3);">vs its own 24h average</span>

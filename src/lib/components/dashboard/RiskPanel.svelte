@@ -6,6 +6,7 @@
   import type { RiskProfile } from '$lib/dashboard/types';
   import { pct, signedPct } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
+  import { DERIVED } from '$lib/dashboard/sources';
 
   export let risk: RiskProfile | null;
 
@@ -76,7 +77,7 @@
     style="border-color: var(--d-border);"
   >
     <h2 class="text-sm font-semibold" style="color: var(--d-text);">Risk Profile
-      <InfoTip label="Risk Profile" text="Standard risk measures over daily closes from the last 30 days. Volatility is annualised realised volatility, not a rating. The window excludes the launch period, where bonding-curve moves of several thousand percent make every measure meaningless." />
+      <InfoTip label="Risk Profile" text="Standard risk measures over daily closes from the last 30 days. Volatility is annualised realised volatility, not a rating. The window excludes the launch period, where bonding-curve moves of several thousand percent make every measure meaningless." source={DERIVED.fromCandlesDaily} />
     </h2>
     {#if risk}
       <span class="d-numeric text-[0.6875rem]" style="color: var(--d-text-3);">

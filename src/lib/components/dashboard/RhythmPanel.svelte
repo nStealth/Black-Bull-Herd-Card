@@ -9,6 +9,7 @@
   import type { TradingRhythm } from '$lib/dashboard/types';
   import { usdCompact } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
+  import { DERIVED } from '$lib/dashboard/sources';
 
   export let rhythm: TradingRhythm | null;
 
@@ -39,8 +40,7 @@
       Trading Rhythm
       <InfoTip
         label="Trading Rhythm"
-        text="Average volume by hour of day, folded from a week of hourly candles. Slippage is not constant through the day — the busiest hours are the ones where a large order is least likely to move the price. Bars are UTC; the labels underneath convert to your own timezone."
-      />
+        text="Average volume by hour of day, folded from a week of hourly candles. Slippage is not constant through the day — the busiest hours are the ones where a large order is least likely to move the price. Bars are UTC; the labels underneath convert to your own timezone." source={DERIVED.fromCandlesHourly} />
     </h2>
     {#if rhythm}
       <span class="d-numeric text-[0.6875rem]" style="color: var(--d-text-3);">

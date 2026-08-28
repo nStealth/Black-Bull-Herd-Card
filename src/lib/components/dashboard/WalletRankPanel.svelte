@@ -9,6 +9,7 @@
   import type { WalletRank } from '$lib/dashboard/types';
   import { compact, count, pct, shortAddress, usd, usdCompact } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
+  import { SOURCES } from '$lib/dashboard/sources';
 
   let address = '';
   let result: WalletRank | null = null;
@@ -88,8 +89,7 @@
       Find Your Rank
       <InfoTip
         label="Find Your Rank"
-        text="Paste any Solana address to see where it sits among every $ANSEM holder — no wallet connection and no signature. Ranks are exact for the top of the index; below that a wallet holds dust, so it gets its real balance and tier without a position number."
-      />
+        text="Paste any Solana address to see where it sits among every $ANSEM holder — no wallet connection and no signature. Ranks are exact for the top of the index; below that a wallet holds dust, so it gets its real balance and tier without a position number." source={SOURCES.holders} />
     </h2>
     <span class="text-[0.6875rem]" style="color: var(--d-text-3);">address only · read-only</span>
   </header>

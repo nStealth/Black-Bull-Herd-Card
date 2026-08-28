@@ -7,6 +7,7 @@
   import type { ActivityStats, WindowStats } from '$lib/dashboard/types';
   import { compact, count, usdCompact } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
+  import { SOURCES } from '$lib/dashboard/sources';
 
   export let activity: ActivityStats | null;
 
@@ -34,7 +35,7 @@
 <section class="d-card overflow-hidden">
   <header class="border-b px-5 py-3.5" style="border-color: var(--d-border);">
     <h2 class="text-sm font-semibold" style="color: var(--d-text);">Trading Activity
-      <InfoTip label="Trading Activity" text="Buys against sells in each window, summed across every pool. Up to 24h the source publishes real trade counts; the 7D and 30D rows carry price and volume from candle history, with counts left blank because no free provider breaks them out beyond a day." />
+      <InfoTip label="Trading Activity" text="Buys against sells in each window, summed across every pool. Up to 24h the source publishes real trade counts; the 7D and 30D rows carry price and volume from candle history, with counts left blank because no free provider breaks them out beyond a day." source={SOURCES.dexscreener} />
     </h2>
   </header>
 

@@ -9,6 +9,7 @@
   import type { TradeFlow, WalletFlow } from '$lib/dashboard/types';
   import { pct, shortAddress, usdCompact } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
+  import { DERIVED } from '$lib/dashboard/sources';
 
   export let flow: TradeFlow | null;
 
@@ -47,8 +48,7 @@
       Wallet Flow
       <InfoTip
         label="Wallet Flow"
-        text="Every trade in the window folded by wallet, buys positive and sells negative, so you can see who is building a position and who is leaving. Aggregate volume hides this — a balanced buy-sell split can be one wallet taking the other side of many small sells. The window is whatever the tape actually covers, stated in the header, not a full day."
-      />
+        text="Every trade in the window folded by wallet, buys positive and sells negative, so you can see who is building a position and who is leaving. Aggregate volume hides this — a balanced buy-sell split can be one wallet taking the other side of many small sells. The window is whatever the tape actually covers, stated in the header, not a full day." source={DERIVED.fromTapeAndHolders} />
     </h2>
     {#if flow}
       <span class="d-numeric text-[0.6875rem]" style="color: var(--d-text-3);">

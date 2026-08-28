@@ -12,6 +12,7 @@
   import type { Candle, PriceSeries } from '$lib/dashboard/types';
   import { compact, usd, usdCompact } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
+  import { SOURCES } from '$lib/dashboard/sources';
 
   export let priceUsd: number;
 
@@ -69,8 +70,7 @@
       If You Had Bought
       <InfoTip
         label="If You Had Bought"
-        text="Priced off the real daily close history, not a projection. Pick a date and an amount to see what the position would be worth now. The launch entry is the bonding curve's opening day — a price almost nobody actually got — so treat that figure as the token's full range rather than a realistic entry."
-      />
+        text="Priced off the real daily close history, not a projection. Pick a date and an amount to see what the position would be worth now. The launch entry is the bonding curve's opening day — a price almost nobody actually got — so treat that figure as the token's full range rather than a realistic entry." source={SOURCES.candles} />
     </h2>
     {#if entry}
       <span class="d-numeric text-[0.6875rem]" style="color: var(--d-text-3);">
