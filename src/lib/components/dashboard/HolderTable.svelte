@@ -19,37 +19,58 @@
   let error = '';
   let query = '';
   let tierId = 'all';
-  let minValueUsd = 0;
+  let band = 'any';
   let walletsOnly = false;
 
   // Sorting is deliberately absent. Rank is assigned by balance, and value and
   // percent of supply are both balance times a constant, so "sort by value" and
-  // "sort by % supply" would be three buttons producing one order. What does
-  // partition this list is which tier a wallet is in, what it is worth, and
-  // whether it is a person at all.
-  const VALUE_STEPS = [
-    { key: 0, label: 'Any' },
-    { key: 1_000, label: '$1K+' },
-    { key: 10_000, label: '$10K+' },
-    { key: 100_000, label: '$100K+' }
+  // "sort by % supply" would be three buttons producing one order.
+  //
+  // Value is banded rather than thresholded for the same reason. Rows arrive in
+  // rank order, so whatever is loaded is always the richest wallets — a
+  // minimum can only trim the tail, and the first hundred below the top ten all
+  // sit between roughly $90K and $180K, which is why "$1K+", "$10K+" and
+  // "$100K+" each kept all hundred rows and read as dead buttons. Bands split
+  // the list, and every control carries its own match count so a band with
+  // nothing in it is visibly empty rather than apparently broken.
+  const VALUE_BANDS = [
+    { key: 'any', label: 'Any', min: 0, max: Infinity },
+    { key: 'm1', label: '$1M+', min: 1_000_000, max: Infinity },
+    { key: 'k100', label: '$100K–1M', min: 100_000, max: 1_000_000 },
+    { key: 'k10', label: '$10K–100K', min: 10_000, max: 100_000 },
+    { key: 'sub', label: 'Under $10K', min: 0, max: 10_000 }
   ] as const;
 
+  const valueOf = (h: Holder) => h.balance * priceUsd;
+  const inBand = (h: Holder, b: (typeof VALUE_BANDS)[number]) => {
+    const v = valueOf(h);
+    return v >= b.min && v < b.max;
+  };
+
   $: needle = query.trim().toLowerCase();
-  $: filtered = rows.filter(
-    (h) =>
-      (!needle || h.owner.toLowerCase().includes(needle)) &&
-      (tierId === 'all' || h.tierId === tierId) &&
-      (!walletsOnly || !h.entity) &&
-      (minValueUsd === 0 || (priceUsd > 0 && h.balance * priceUsd >= minValueUsd))
+  $: searched = needle ? rows.filter((h) => h.owner.toLowerCase().includes(needle)) : rows;
+  $: peopleOnly = walletsOnly ? searched.filter((h) => !h.entity) : searched;
+
+  // Counts are taken with the control's own dimension left out, so each number
+  // says what clicking it would actually give you.
+  $: tierCounts = new Map(
+    TIERS.map((t) => [t.id, peopleOnly.filter((h) => h.tierId === t.id).length])
   );
+  $: byTier = tierId === 'all' ? peopleOnly : peopleOnly.filter((h) => h.tierId === tierId);
+  $: bandCounts = new Map(
+    VALUE_BANDS.map((b) => [b.key, b.key === 'any' ? byTier.length : byTier.filter((h) => inBand(h, b)).length])
+  );
+
+  $: activeBand = VALUE_BANDS.find((b) => b.key === band) ?? VALUE_BANDS[0];
+  $: filtered = band === 'any' ? byTier : byTier.filter((h) => inBand(h, activeBand));
   $: narrowed = filtered.length !== rows.length;
-  $: poolCount = rows.filter((h) => h.entity).length;
+  $: poolCount = searched.filter((h) => h.entity).length;
   $: hasMore = rows.length > 0 && rows[rows.length - 1].rank < indexed;
 
   function reset() {
     query = '';
     tierId = 'all';
-    minValueUsd = 0;
+    band = 'any';
     walletsOnly = false;
   }
 
@@ -120,28 +141,30 @@
         class="rounded border px-2 py-1.5 text-[0.6875rem] font-semibold outline-none focus:border-[var(--d-accent)]"
         style="background: var(--d-bg-subtle); border-color: var(--d-border); color: var(--d-text);"
       >
-        <option value="all">All tiers</option>
+        <option value="all">All tiers ({count(peopleOnly.length)})</option>
         {#each TIERS as t (t.id)}
-          <option value={t.id}>{t.name}</option>
+          <option value={t.id}>{t.name} ({count(tierCounts.get(t.id) ?? 0)})</option>
         {/each}
       </select>
     </label>
 
     <div class="flex items-center gap-1.5">
       <span class="d-label">Value</span>
-      <div class="flex gap-0.5" role="group" aria-label="Minimum holding value">
-        {#each VALUE_STEPS as step (step.key)}
+      <div class="flex flex-wrap gap-0.5" role="group" aria-label="Holding value band">
+        {#each VALUE_BANDS as b (b.key)}
+          {@const n = bandCounts.get(b.key) ?? 0}
           <button
             type="button"
             class="d-tap rounded px-2 py-1 text-[0.6875rem] font-semibold transition-colors disabled:opacity-40"
-            style={minValueUsd === step.key
+            style={band === b.key
               ? 'background: var(--d-accent-soft); color: var(--d-accent-ink);'
-              : 'background: transparent; color: var(--d-text-3);'}
-            aria-pressed={minValueUsd === step.key}
-            disabled={priceUsd <= 0 && step.key > 0}
-            on:click={() => (minValueUsd = step.key)}
+              : `background: transparent; color: var(--d-text-3); opacity: ${n === 0 && b.key !== 'any' ? '0.45' : '1'};`}
+            aria-pressed={band === b.key}
+            disabled={priceUsd <= 0 && b.key !== 'any'}
+            on:click={() => (band = b.key)}
           >
-            {step.label}
+            {b.label}
+            <span class="font-normal opacity-70">{count(n)}</span>
           </button>
         {/each}
       </div>
@@ -150,9 +173,7 @@
     <label class="d-tap flex items-center gap-1.5 text-[0.6875rem]" style="color: var(--d-text-2);">
       <input type="checkbox" bind:checked={walletsOnly} class="accent-[var(--d-accent)]" />
       Hide pools and programs
-      {#if poolCount > 0}
-        <span style="color: var(--d-text-3);">({poolCount})</span>
-      {/if}
+      <span style="color: var(--d-text-3);">({count(poolCount)})</span>
     </label>
 
     {#if narrowed}

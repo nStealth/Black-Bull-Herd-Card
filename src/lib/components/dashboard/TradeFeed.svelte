@@ -57,6 +57,11 @@
   $: sellVolume = sized.filter((t) => t.kind === 'sell').reduce((s, t) => s + t.amountUsd, 0);
   $: netFlow = buyVolume - sellVolume;
   $: sizeLabel = SIZES.find((s) => s.key === minUsd)?.label ?? 'Any size';
+  // Each threshold shows what it would leave, so a band with nothing above it
+  // reads as empty rather than as a button that did nothing.
+  $: sizeCounts = new Map(
+    SIZES.map((s) => [s.key, s.key === 0 ? trades.length : trades.filter((t) => t.amountUsd >= s.key).length])
+  );
 
   const FILTERS = [
     { key: 'all', label: 'All' },
@@ -110,16 +115,18 @@
         aria-label="Minimum trade size"
       >
         {#each SIZES as s (s.key)}
+          {@const n = sizeCounts.get(s.key) ?? 0}
           <button
             type="button"
             class="rounded px-2 py-1 text-[0.6875rem] font-semibold transition-colors d-tap"
             style={minUsd === s.key
               ? 'background: var(--d-accent-soft); color: var(--d-accent-ink);'
-              : 'background: transparent; color: var(--d-text-3);'}
+              : `background: transparent; color: var(--d-text-3); opacity: ${n === 0 && s.key > 0 ? '0.45' : '1'};`}
             aria-pressed={minUsd === s.key}
             on:click={() => (minUsd = s.key)}
           >
             {s.label}
+            <span class="font-normal opacity-70">{count(n)}</span>
           </button>
         {/each}
       </div>
