@@ -119,6 +119,21 @@
   $: maxVol = candles.length ? Math.max(...candles.map((c) => c.v)) || 1 : 1;
   $: volBarW = candles.length > 1 ? Math.max(1, (W / candles.length) * 0.6) : 6;
 
+  /**
+   * Which side the window's volume traded on.
+   *
+   * This is volume on rising candles against volume on falling ones — not a
+   * buy/sell split. OHLCV carries no taker side, and no free provider publishes
+   * one as a time series, so a stacked buy/sell chart here would have to be
+   * invented. Candle direction is the honest stand-in every exchange uses for
+   * the same reason, and it is named as what it is everywhere it appears.
+   */
+  const isUp = (c: Candle) => c.c >= c.o;
+  $: upVolume = candles.filter(isUp).reduce((sum, c) => sum + c.v, 0);
+  $: downVolume = candles.filter((c) => !isUp(c)).reduce((sum, c) => sum + c.v, 0);
+  $: totalVolume = upVolume + downVolume;
+  $: upSharePct = totalVolume > 0 ? (upVolume / totalVolume) * 100 : null;
+
   $: gridLines = [0, 0.5, 1].map((f) => y(yMax - (yMax - yMin) * f));
 
   $: active = cursor !== null ? (candles[cursor] ?? null) : null;
@@ -150,7 +165,7 @@
     style="border-color: var(--d-border);"
   >
     <h2 class="text-sm font-semibold" style="color: var(--d-text);">Price History
-      <InfoTip label="Price History" text="Open/high/low/close candles with a volume strip, taken from the deepest pool — the one hardest to move with a single trade. Hover anywhere on the chart to read the exact price and volume at that moment." source={SOURCES.candles} />
+      <InfoTip label="Price History" text="Price and volume on one timeline, taken from the deepest pool — the one hardest to move with a single trade. Each volume bar is coloured by whether that candle closed up or down, and the split above the chart is how the window's volume divides between the two. That is candle direction, not a buy/sell split: OHLCV carries no taker side and no free provider publishes one as a time series, so a buy-versus-sell chart here would have to be invented. Hover anywhere to read the exact price, volume and direction at that moment." source={SOURCES.candles} />
     </h2>
 
     <div class="flex gap-0.5" role="group" aria-label="Chart range">
@@ -185,6 +200,30 @@
           H {usd(series.high, 6)} · L {usd(series.low, 6)} · Vol {usdCompact(series.volumeUsd)}
         </span>
       </div>
+
+      {#if upSharePct !== null}
+        <div class="mb-3">
+          <div class="flex items-baseline justify-between text-[0.6875rem]">
+            <span style="color: var(--d-up);">
+              {upSharePct.toFixed(0)}% on rising candles
+              <span class="d-numeric" style="color: var(--d-text-3);">{usdCompact(upVolume)}</span>
+            </span>
+            <span style="color: var(--d-down);">
+              <span class="d-numeric" style="color: var(--d-text-3);">{usdCompact(downVolume)}</span>
+              {(100 - upSharePct).toFixed(0)}% on falling
+            </span>
+          </div>
+          <div
+            class="mt-1 flex h-1.5 overflow-hidden rounded-full"
+            style="background: var(--d-bg-subtle);"
+            role="img"
+            aria-label="{upSharePct.toFixed(0)} percent of volume traded on rising candles"
+          >
+            <div style="width: {upSharePct}%; background: var(--d-up);" />
+            <div style="width: {100 - upSharePct}%; background: var(--d-down);" />
+          </div>
+        </div>
+      {/if}
 
       {#if failedLabel}
         <p class="mb-2 text-[0.6875rem]" style="color: var(--d-down);" role="status">
@@ -239,8 +278,8 @@
             y={H - PAD_BOTTOM - (c.v / maxVol) * VOL_H}
             width={volBarW}
             height={Math.max(0.5, (c.v / maxVol) * VOL_H)}
-            fill={c.c >= c.o ? 'var(--d-up)' : 'var(--d-down)'}
-            opacity="0.22"
+            fill={isUp(c) ? 'var(--d-up)' : 'var(--d-down)'}
+            opacity="0.55"
           />
         {/each}
 
@@ -270,7 +309,12 @@
       <div class="mt-1 flex justify-between text-[0.6875rem]" style="color: var(--d-text-3);">
         {#if active}
           <span class="d-numeric">{stamp(active)}</span>
-          <span class="d-numeric">Vol {usdCompact(active.v)}</span>
+          <span class="d-numeric">
+            Vol {usdCompact(active.v)}
+            <span style="color: {isUp(active) ? 'var(--d-up)' : 'var(--d-down)'};">
+              {isUp(active) ? 'rising' : 'falling'}
+            </span>
+          </span>
         {:else}
           <span class="d-numeric">{stamp(candles[0])}</span>
           <span class="d-numeric">{stamp(candles[candles.length - 1])}</span>
