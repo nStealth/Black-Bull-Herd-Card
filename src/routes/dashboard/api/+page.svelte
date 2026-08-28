@@ -12,6 +12,12 @@
     summary: string;
     returns: string;
     cache: string;
+    /** Upstream this route ultimately reads from. */
+    source: string;
+    /** Per-IP ceiling, or what stands in for one. */
+    limit: string;
+    /** Trimmed but genuine — captured from the live route, not written by hand. */
+    example: string;
     note?: string;
   }
 
@@ -23,34 +29,112 @@
       summary: 'Everything on the dashboard in one payload.',
       returns:
         'Price, market cap, supply, liquidity by pool, trading windows, depth ladder, risk profile, contract authorities, market context, pulse, rhythm and provider status.',
-      cache: '15s'
+      cache: '15s',
+      source: 'DexScreener, Solana RPC, CoinGecko, Helius, Jupiter',
+      limit: 'None — served from cache',
+      example: `{
+  "overview": { "symbol": "ANSEM", "priceUsd": 0.3739, "marketCapUsd": 372900000,
+                "liquidityUsd": 7760000, "totalSupply": 997400000, "pairs": [ ... ] },
+  "activity": { "h24": { "buys": 2841, "sells": 2617, "volumeUsd": 3460000,
+                         "priceChangePct": 16.7 } },
+  "status":   { "market": "live", "holders": "live", "cache": "shared" },
+  "updatedAt": 1787915499000
+}`
     },
     {
       path: '/api/dashboard/chart?range=24h',
       summary: 'OHLCV candles for the deepest pool.',
       returns: 'Open, high, low, close and volume per candle, plus the window change, high and low.',
       cache: '30s–5m by range',
-      note: 'range: 1h · 24h · 7d · 30d · all'
+      source: 'GeckoTerminal',
+      limit: 'None — served from cache',
+      note: 'range: 1h · 24h · 7d · 30d · all',
+      example: `{
+  "range": "24h",
+  "candles": [ { "t": 1787911200000, "o": 0.3702, "h": 0.3784,
+                 "l": 0.3691, "c": 0.3759, "v": 62300 } ],
+  "changePct": 16.72,
+  "high": 0.400165,
+  "low": 0.321295,
+  "volumeUsd": 3460000
+}`
     },
     {
       path: '/api/dashboard/trades',
       summary: 'Recent swaps above $250, newest first.',
       returns: 'Direction, USD size, token amount, price, wallet and transaction hash.',
-      cache: '15s'
+      cache: '15s',
+      source: 'GeckoTerminal trade tape',
+      limit: 'None — served from cache',
+      example: `{
+  "trades": [ {
+    "kind": "sell",
+    "amountUsd": 611.4398841291721,
+    "tokenAmount": 1635,
+    "priceUsd": 0.3739693480912368,
+    "wallet": "2jDYbjZS6fZ8A2DmXZ2UmtvZFtzvfQzvhG8wviDGgFh2",
+    "txHash": "3bYL9dd6UkBRefLKRuHvuBR8ZuLYDqx2ydWa3j52CRQcYvfpmJkz...",
+    "timestamp": 1787915499000
+  } ]
+}`
     },
     {
       path: '/api/dashboard/holders?page=1&pageSize=50',
       summary: 'Ranked holder list.',
       returns: 'Rank, owner, balance, share of supply, tier, and a label when the address is a known pool.',
       cache: '2m',
-      note: 'pageSize caps at 250. Returns 503 until an indexing provider is configured.'
+      source: 'Helius token-account index',
+      limit: 'None — served from cache',
+      note: 'pageSize caps at 250. Returns 503 until an indexing provider is configured.',
+      example: `{
+  "holders": [ {
+    "rank": 4,
+    "owner": "CLM6E4zpTviEC77nWKogpVLQoXx9tgoQCYJ8NibxKg1Q",
+    "balance": 9327234.190676,
+    "percentSupply": 0.935176218066704,
+    "entity": null,
+    "tierId": "epic"
+  } ],
+  "page": 1, "pageSize": 50, "indexed": 10000,
+  "totalHolders": 85642, "hasMore": true
+}`
+    },
+    {
+      path: '/api/dashboard/quote?usd=10000&side=buy',
+      summary: 'What a trade of any size would actually cost.',
+      returns:
+        'Price impact, tokens or dollars received, and the venues the router would split the order across.',
+      cache: '30s per $100 bucket',
+      source: 'Jupiter router — quoted live on a cache miss',
+      limit: '40 requests a minute per IP',
+      note: 'usd between 10 and 100,000,000. side: buy · sell. 400 outside that range.',
+      example: `{
+  "usd": 10000,
+  "side": "buy",
+  "impactPct": 0.5254130403690082,
+  "outAmount": 26556.148626,
+  "route": [ "TesseraV", "Quantum", "Meteora DLMM" ]
+}`
     },
     {
       path: '/api/dashboard/rank/{wallet}',
       summary: 'Where one address sits among all holders.',
       returns: 'Rank, percentile, balance, live value, share of supply, tier and distance to the next tier.',
       cache: '30s',
-      note: 'Rate limited to 30 requests a minute per IP. Rank is null outside the ranked slice.'
+      source: 'Helius token-account index',
+      limit: '30 requests a minute per IP',
+      note: 'Rank is null outside the ranked slice.',
+      example: `{
+  "wallet": "CLM6E4zpTviEC77nWKogpVLQoXx9tgoQCYJ8NibxKg1Q",
+  "balance": 9327234.190676,
+  "valueUsd": 3506107.3322751084,
+  "percentSupply": 0.935176218066704,
+  "tierId": "epic", "tierName": "Gold Bull",
+  "rank": 4, "percentile": 99.995329394456,
+  "totalHolders": 85642, "rankedCount": 10000,
+  "toNextTier": { "tokens": 672765.809324, "tierName": "Legendary Bull" },
+  "isPool": false, "poolLabel": null
+}`
     }
   ];
 
@@ -138,7 +222,30 @@
             {#if endpoint.note}
               <p class="mt-1.5 text-[0.6875rem]" style="color: var(--d-text-3);">{endpoint.note}</p>
             {/if}
+
+            <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-[0.6875rem]">
+              <div class="flex gap-1.5">
+                <dt style="color: var(--d-text-3);">Source</dt>
+                <dd style="color: var(--d-text-2);">{endpoint.source}</dd>
+              </div>
+              <div class="flex gap-1.5">
+                <dt style="color: var(--d-text-3);">Limit</dt>
+                <dd style="color: var(--d-text-2);">{endpoint.limit}</dd>
+              </div>
+            </dl>
           </div>
+
+          <details class="border-t" style="border-color: var(--d-border);">
+            <summary
+              class="d-tap cursor-pointer px-5 py-2 text-[0.6875rem] font-semibold"
+              style="color: var(--d-text-3);"
+            >
+              Example response
+            </summary>
+            <pre
+              class="d-numeric overflow-x-auto px-5 pb-3.5 text-[0.6875rem] leading-relaxed"
+              style="color: var(--d-text-2);">{endpoint.example}</pre>
+          </details>
         </div>
       {/each}
     </div>
@@ -161,7 +268,10 @@
     </div>
     <p class="mt-2.5 text-[0.6875rem] leading-relaxed" style="color: var(--d-text-3);">
       Nulls in a response mean a figure was not measured, never that it is zero. Where a provider
-      rate-limits, the last good payload is served rather than a blank one.
+      rate-limits, the last good payload is served rather than a blank one. Example responses are
+      trimmed for length but otherwise captured from these routes rather than written by hand, so
+      the field names and shapes are the real ones. No route serves history: every one answers for
+      now, and nothing here is stored between requests.
     </p>
   </section>
 
