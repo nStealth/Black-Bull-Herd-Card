@@ -45,12 +45,12 @@ import type {
   WindowStats
 } from '$lib/dashboard/types';
 
-const OVERVIEW_TTL_SEC = 30;
+const OVERVIEW_TTL_SEC = 60;
 const HOLDERS_TTL_SEC = 900; // holder sets move slowly and cost 10 RPC pages
 const META_TTL_SEC = 3600; // coingecko id and graduation state are effectively static
 const RANKING_TTL_SEC = 300; // CoinGecko free tier is rate-limited; do not hammer it
 const SECURITY_TTL_SEC = 600; // authorities change at most once, on revocation
-const TRADES_TTL_SEC = 20; // the tape is the one panel that should feel live
+const TRADES_TTL_SEC = 60; // matches the shared cache window
 const DEPTH_TTL_SEC = 120; // eight sequential router quotes; do not run them often
 
 /**

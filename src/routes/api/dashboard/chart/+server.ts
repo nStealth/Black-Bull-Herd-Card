@@ -6,6 +6,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { loadPriceSeries } from '$lib/server/market';
 import type { ChartRange } from '$lib/dashboard/types';
+import { publicWindow } from '$lib/server/cacheWindow';
 
 export const config = { maxDuration: 30 };
 
@@ -31,15 +32,12 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
       );
     }
 
-    // Mirrors the server-side TTL for this range so a shared CDN and the
-    // in-process cache expire together rather than serving mismatched candles.
-    const maxAge = range === '1h' ? 30 : range === '24h' ? 60 : 300;
     setHeaders({
       // Read-only, cached and free of user data, so cross-origin reads are
       // welcome: other sites and bots can surface this token's numbers.
       'access-control-allow-origin': '*',
 
-      'cache-control': `public, max-age=${maxAge}, stale-while-revalidate=600`
+      'cache-control': publicWindow
     });
 
     return json(series);

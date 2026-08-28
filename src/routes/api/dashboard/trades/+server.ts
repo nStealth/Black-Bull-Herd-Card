@@ -5,6 +5,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { loadTrades } from '$lib/server/market';
+import { publicWindow } from '$lib/server/cacheWindow';
 
 export const config = { maxDuration: 30 };
 
@@ -27,7 +28,7 @@ export const GET: RequestHandler = async ({ setHeaders }) => {
       // welcome: other sites and bots can surface this token's numbers.
       'access-control-allow-origin': '*',
 
-      'cache-control': 'public, max-age=15, stale-while-revalidate=60'
+      'cache-control': publicWindow
     });
 
     return json({ trades, updatedAt: Date.now() });

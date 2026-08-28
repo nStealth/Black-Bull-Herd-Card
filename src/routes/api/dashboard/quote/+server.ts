@@ -6,6 +6,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { loadQuote } from '$lib/server/market';
 import { clientKey, rateLimit } from '$lib/server/rateLimit';
+import { publicWindow } from '$lib/server/cacheWindow';
 
 export const config = { maxDuration: 20 };
 
@@ -42,7 +43,7 @@ export const GET: RequestHandler = async ({ url, request, setHeaders }) => {
       );
     }
 
-    setHeaders({ 'cache-control': 'public, max-age=20' });
+    setHeaders({ 'cache-control': publicWindow });
     return json(quote);
   } catch (error) {
     console.error('Quote failed:', error);

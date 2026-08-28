@@ -6,6 +6,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { loadHolderIndex } from '$lib/server/market';
 import type { HoldersPage } from '$lib/dashboard/types';
+import { publicWindow } from '$lib/server/cacheWindow';
 
 export const config = { maxDuration: 60 };
 
@@ -52,7 +53,7 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
       // welcome: other sites and bots can surface this token's numbers.
       'access-control-allow-origin': '*',
 
-      'cache-control': 'public, max-age=120, stale-while-revalidate=600'
+      'cache-control': publicWindow
     });
 
     return json(payload);

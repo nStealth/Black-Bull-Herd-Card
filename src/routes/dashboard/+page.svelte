@@ -32,7 +32,9 @@
 
   export let data: PageData;
 
-  const REFRESH_MS = 30_000;
+  // Matches the shared cache window. Polling faster only re-fetches bytes the
+  // edge cannot have changed yet.
+  const REFRESH_MS = 60_000;
 
   let snapshot: DashboardSnapshot = data.snapshot;
   let refreshing = false;

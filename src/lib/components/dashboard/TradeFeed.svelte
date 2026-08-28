@@ -13,7 +13,8 @@
 
   export let initial: TradeEvent[] = [];
 
-  const REFRESH_MS = 20_000;
+  /** The shared cache window; a faster poll cannot see anything newer. */
+  const REFRESH_MS = 60_000;
   /** A print at or above this notional gets the whale marker. */
   const WHALE_USD = 10_000;
 

@@ -4,6 +4,7 @@
 
 import type { PageServerLoad } from './$types';
 import { loadHolderIndex, loadPriceSeries, loadSnapshot, loadTrades } from '$lib/server/market';
+import { publicWindow } from '$lib/server/cacheWindow';
 
 const INITIAL_HOLDER_ROWS = 110; // top 10 podium + first 100 table rows
 
@@ -21,7 +22,7 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
   ]);
 
   setHeaders({
-    'cache-control': 'public, max-age=15, stale-while-revalidate=120'
+    'cache-control': publicWindow
   });
 
   return {
