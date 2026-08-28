@@ -51,7 +51,7 @@
   let walletChecked = false;
 
   // Environment
-  const siteUrl = import.meta.env.VITE_SITE_URL || "";
+  const siteUrl = import.meta.env.VITE_SITE_URL || "https://ansemherd.online";
 
   onMount(async () => {
     if (browser) {
@@ -244,18 +244,34 @@
 
 <svelte:head>
   <title>Black Bull Herd Card 🐂🀄️ | $ANSEM</title>
+  <!--
+    The description is what a link preview shows, so it has to describe what is
+    here now. It sold the claim window for weeks after that window shut.
+  -->
   <meta
     name="description"
-    content="Claim your exclusive Black Bull Herd NFT Card! Join 20,000 bulls charging forward. $ANSEM holders only."
+    content="The Black Bull Herd Card, a community project for $ANSEM holders on Solana. Claiming closed on 17 August 2026; the live ANSEM Analytics dashboard is open to everyone."
   />
+  <link rel="canonical" href={siteUrl} />
   <meta property="og:title" content="Black Bull Herd Card 🐂🀄️ | $ANSEM" />
   <meta
     property="og:description"
-    content="Claim your exclusive Black Bull Herd NFT Card! Join the herd."
+    content="A community project for $ANSEM holders. Claiming has closed — the live analytics dashboard is open to everyone, no wallet needed."
   />
   <meta property="og:type" content="website" />
   <meta property="og:url" content={siteUrl} />
+  <meta property="og:image" content="{siteUrl}/og.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="ANSEM Analytics — live overwatch for $ANSEM on Solana" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@blackbullsol" />
+  <meta name="twitter:title" content="Black Bull Herd Card 🐂🀄️ | $ANSEM" />
+  <meta
+    name="twitter:description"
+    content="A community project for $ANSEM holders. Claiming has closed — the live analytics dashboard is open to everyone, no wallet needed."
+  />
+  <meta name="twitter:image" content="{siteUrl}/og.png" />
   <meta name="twitter:url" content={siteUrl} />
 </svelte:head>
 

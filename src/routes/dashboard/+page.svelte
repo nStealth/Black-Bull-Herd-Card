@@ -207,14 +207,22 @@
   <meta property="og:title" content={shareTitle} />
   <meta property="og:description" content={shareDescription} />
   <meta property="og:url" content="{siteUrl}/dashboard" />
-  {#if overview?.imageUrl}
-    <meta property="og:image" content={overview.imageUrl} />
-    <meta property="twitter:image" content={overview.imageUrl} />
-  {/if}
+
+  <!--
+    Our own 1200x630, not the token logo. summary_large_image crops to about
+    1.91:1, and the logo is a square on a third-party CDN — it arrived
+    letterboxed, and its availability was somebody else's decision.
+  -->
+  <meta property="og:image" content="{siteUrl}/og.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="ANSEM Analytics — live overwatch for $ANSEM on Solana" />
 
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@blackbullsol" />
   <meta name="twitter:title" content={shareTitle} />
   <meta name="twitter:description" content={shareDescription} />
+  <meta name="twitter:image" content="{siteUrl}/og.png" />
 </svelte:head>
 
 <CryptoBackground />

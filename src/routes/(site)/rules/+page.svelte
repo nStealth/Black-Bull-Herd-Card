@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { CAMPAIGN_CLOSED, CAMPAIGN_CLOSED_ON } from '$lib/campaign';
   const siteUrl = import.meta.env.VITE_SITE_URL || "";
 </script>
 
@@ -6,8 +7,9 @@
   <title>Campaign Rules | Black Bull Herd Card 🐂🀄️</title>
   <meta
     name="description"
-    content="Official rules for the Black Bull Herd Card community campaign."
+    content="Rules for the Black Bull Herd Card community campaign, which closed on 17 August 2026."
   />
+  <meta name="robots" content="noindex" />
   <meta property="og:url" content={siteUrl} />
   <meta name="twitter:url" content={siteUrl} />
 </svelte:head>
@@ -34,6 +36,27 @@
       <span class="w-1.5 h-1.5 rounded-full bg-accent-purple" />
       Community Project
     </div>
+
+    {#if CAMPAIGN_CLOSED}
+      <!--
+        Everything below is written in the present tense for a window that has
+        shut. Rather than rewrite rules nobody can act on, the page says up
+        front that they are a record.
+      -->
+      <div
+        class="mt-6 mx-auto max-w-2xl rounded-2xl border border-accent-amber/30 bg-accent-amber/[0.07] px-6 py-5 text-center"
+      >
+        <p class="text-sm font-semibold text-accent-amber">
+          These rules are a record, not an open call
+        </p>
+        <p class="mt-2 text-[0.9375rem] leading-relaxed text-text-secondary">
+          Claiming closed on {CAMPAIGN_CLOSED_ON} and cards can no longer be submitted. The
+          rules are kept here for anyone who took part. What is still running is
+          <a href="/dashboard" class="text-accent-amber underline">ANSEM Analytics</a> — free,
+          live, and open to everyone.
+        </p>
+      </div>
+    {/if}
   </div>
 
   <!-- Content -->
