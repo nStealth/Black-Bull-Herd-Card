@@ -341,11 +341,15 @@
       <RhythmPanel {rhythm} />
     </div>
 
-    <!-- Activity, liquidity, distribution -->
-    <div class="mb-4 grid grid-cols-3 gap-3 max-lg:grid-cols-1">
+    <!-- Activity and distribution -->
+    <div class="mb-4 grid grid-cols-2 gap-3 max-lg:grid-cols-1">
       <ActivityPanel {activity} />
-      <PairsPanel pairs={overview.pairs} />
       <DistributionPanel distribution={snapshot.distribution} />
+    </div>
+
+    <!-- Liquidity gets the full width: it is a thirty-row ranking, not a stat -->
+    <div class="mb-4">
+      <PairsPanel pairs={overview.pairs} />
     </div>
 
     <!-- Personal lookup, above the aggregate panels: the one row on this page
