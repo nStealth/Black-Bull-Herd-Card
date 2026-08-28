@@ -7,7 +7,7 @@
 
   import { onDestroy, onMount } from 'svelte';
   import type { TradeEvent } from '$lib/dashboard/types';
-  import { compact, relativeAge, shortAddress, usd, usdCompact } from '$lib/dashboard/format';
+  import { compact, count, relativeAge, shortAddress, usd, usdCompact } from '$lib/dashboard/format';
   import InfoTip from '$lib/components/dashboard/InfoTip.svelte';
 
   export let initial: TradeEvent[] = [];
@@ -20,6 +20,7 @@
   let failed = initial.length === 0;
   let now = Date.now();
   let filter: 'all' | 'buy' | 'sell' = 'all';
+  let minUsd = 0;
   let timer: ReturnType<typeof setInterval>;
   let clock: ReturnType<typeof setInterval>;
 
@@ -47,15 +48,30 @@
     clearInterval(clock);
   });
 
-  $: visible = filter === 'all' ? trades : trades.filter((t) => t.kind === filter);
-  $: buyVolume = trades.filter((t) => t.kind === 'buy').reduce((s, t) => s + t.amountUsd, 0);
-  $: sellVolume = trades.filter((t) => t.kind === 'sell').reduce((s, t) => s + t.amountUsd, 0);
+  // Size first, side second. The three volume figures are read off the size
+  // filter but not the side one — filtering to buys and then reporting net flow
+  // would just print the buy total back at you.
+  $: sized = minUsd > 0 ? trades.filter((t) => t.amountUsd >= minUsd) : trades;
+  $: visible = filter === 'all' ? sized : sized.filter((t) => t.kind === filter);
+  $: buyVolume = sized.filter((t) => t.kind === 'buy').reduce((s, t) => s + t.amountUsd, 0);
+  $: sellVolume = sized.filter((t) => t.kind === 'sell').reduce((s, t) => s + t.amountUsd, 0);
   $: netFlow = buyVolume - sellVolume;
+  $: sizeLabel = SIZES.find((s) => s.key === minUsd)?.label ?? 'Any size';
 
   const FILTERS = [
     { key: 'all', label: 'All' },
     { key: 'buy', label: 'Buys' },
     { key: 'sell', label: 'Sells' }
+  ] as const;
+
+  // A tape at $250 and up is mostly retail noise; the question people actually
+  // bring to it is what size is moving, so the thresholds are the answer to
+  // "show me only the prints that matter".
+  const SIZES = [
+    { key: 0, label: 'Any size' },
+    { key: 1_000, label: '$1K+' },
+    { key: 5_000, label: '$5K+' },
+    { key: WHALE_USD, label: '$10K+' }
   ] as const;
 </script>
 
@@ -70,24 +86,56 @@
       <InfoTip label="Live Tape" text="Individual swaps above $250 as they land, newest first, refreshing every 20 seconds. Aggregates hide who is actually moving; every row links to Solscan so you can verify the trade yourself." />
     </h2>
 
-    <div class="flex gap-0.5" role="group" aria-label="Filter trades">
-      {#each FILTERS as f (f.key)}
-        <button
-          type="button"
-          class="rounded px-2 py-1 text-[0.6875rem] font-semibold transition-colors d-tap"
-          style={filter === f.key
-            ? 'background: var(--d-accent-soft); color: var(--d-accent-ink);'
-            : 'background: transparent; color: var(--d-text-3);'}
-          aria-pressed={filter === f.key}
-          on:click={() => (filter = f.key)}
-        >
-          {f.label}
-        </button>
-      {/each}
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="flex gap-0.5" role="group" aria-label="Filter trades by side">
+        {#each FILTERS as f (f.key)}
+          <button
+            type="button"
+            class="rounded px-2 py-1 text-[0.6875rem] font-semibold transition-colors d-tap"
+            style={filter === f.key
+              ? 'background: var(--d-accent-soft); color: var(--d-accent-ink);'
+              : 'background: transparent; color: var(--d-text-3);'}
+            aria-pressed={filter === f.key}
+            on:click={() => (filter = f.key)}
+          >
+            {f.label}
+          </button>
+        {/each}
+      </div>
+
+      <div
+        class="flex gap-0.5 border-l pl-3"
+        style="border-color: var(--d-border);"
+        role="group"
+        aria-label="Minimum trade size"
+      >
+        {#each SIZES as s (s.key)}
+          <button
+            type="button"
+            class="rounded px-2 py-1 text-[0.6875rem] font-semibold transition-colors d-tap"
+            style={minUsd === s.key
+              ? 'background: var(--d-accent-soft); color: var(--d-accent-ink);'
+              : 'background: transparent; color: var(--d-text-3);'}
+            aria-pressed={minUsd === s.key}
+            on:click={() => (minUsd = s.key)}
+          >
+            {s.label}
+          </button>
+        {/each}
+      </div>
     </div>
   </header>
 
   {#if trades.length > 0}
+    {#if minUsd > 0}
+      <p
+        class="border-b px-5 py-1.5 text-[0.625rem]"
+        style="border-color: var(--d-border); background: var(--d-surface-2); color: var(--d-text-3);"
+      >
+        Flow below covers the {count(sized.length)} prints at {sizeLabel}, not the whole tape.
+      </p>
+    {/if}
+
     <div
       class="grid grid-cols-3 border-b"
       style="border-color: var(--d-border); background: var(--d-surface-2);"
@@ -156,6 +204,15 @@
           </a>
         </li>
       {/each}
+
+      {#if visible.length === 0}
+        <li class="px-5 py-10 text-center">
+          <p class="text-[0.8125rem]" style="color: var(--d-text-3);">
+            No {filter === 'all' ? 'prints' : `${filter}s`}{minUsd > 0 ? ` at ${sizeLabel}` : ''} in
+            the last {count(trades.length)} trades.
+          </p>
+        </li>
+      {/if}
     </ul>
   {:else}
     <div class="flex flex-1 flex-col items-center justify-center gap-1.5 px-5 py-12 text-center">

@@ -18,11 +18,40 @@
   let loading = false;
   let error = '';
   let query = '';
+  let tierId = 'all';
+  let minValueUsd = 0;
+  let walletsOnly = false;
 
-  $: filtered = query.trim()
-    ? rows.filter((h) => h.owner.toLowerCase().includes(query.trim().toLowerCase()))
-    : rows;
+  // Sorting is deliberately absent. Rank is assigned by balance, and value and
+  // percent of supply are both balance times a constant, so "sort by value" and
+  // "sort by % supply" would be three buttons producing one order. What does
+  // partition this list is which tier a wallet is in, what it is worth, and
+  // whether it is a person at all.
+  const VALUE_STEPS = [
+    { key: 0, label: 'Any' },
+    { key: 1_000, label: '$1K+' },
+    { key: 10_000, label: '$10K+' },
+    { key: 100_000, label: '$100K+' }
+  ] as const;
+
+  $: needle = query.trim().toLowerCase();
+  $: filtered = rows.filter(
+    (h) =>
+      (!needle || h.owner.toLowerCase().includes(needle)) &&
+      (tierId === 'all' || h.tierId === tierId) &&
+      (!walletsOnly || !h.entity) &&
+      (minValueUsd === 0 || (priceUsd > 0 && h.balance * priceUsd >= minValueUsd))
+  );
+  $: narrowed = filtered.length !== rows.length;
+  $: poolCount = rows.filter((h) => h.entity).length;
   $: hasMore = rows.length > 0 && rows[rows.length - 1].rank < indexed;
+
+  function reset() {
+    query = '';
+    tierId = 'all';
+    minValueUsd = 0;
+    walletsOnly = false;
+  }
 
   function tierOf(tierId: string) {
     return TIERS.find((t) => t.id === tierId) ?? TIERS[0];
@@ -59,6 +88,9 @@
       <h2 class="text-sm font-semibold" style="color: var(--d-text);">Full Rankings</h2>
       <p class="mt-0.5 text-[0.6875rem]" style="color: var(--d-text-3);">
         Showing {count(filtered.length)} of {count(Math.max(0, indexed - 10))} ranked below the top 10
+        {#if narrowed}
+          · filtering {count(rows.length)} loaded rows
+        {/if}
       </p>
     </div>
 
@@ -73,6 +105,67 @@
       />
     </label>
   </header>
+
+  <!-- Filters apply to the rows fetched so far, not to all 9,990 — the count
+       above says which, because a filtered view that silently covers a tenth of
+       the set would read as the whole answer. -->
+  <div
+    class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b px-5 py-2.5 max-md:px-4"
+    style="border-color: var(--d-border); background: var(--d-surface-2);"
+  >
+    <label class="flex items-center gap-1.5">
+      <span class="d-label">Tier</span>
+      <select
+        bind:value={tierId}
+        class="rounded border px-2 py-1.5 text-[0.6875rem] font-semibold outline-none focus:border-[var(--d-accent)]"
+        style="background: var(--d-bg-subtle); border-color: var(--d-border); color: var(--d-text);"
+      >
+        <option value="all">All tiers</option>
+        {#each TIERS as t (t.id)}
+          <option value={t.id}>{t.name}</option>
+        {/each}
+      </select>
+    </label>
+
+    <div class="flex items-center gap-1.5">
+      <span class="d-label">Value</span>
+      <div class="flex gap-0.5" role="group" aria-label="Minimum holding value">
+        {#each VALUE_STEPS as step (step.key)}
+          <button
+            type="button"
+            class="d-tap rounded px-2 py-1 text-[0.6875rem] font-semibold transition-colors disabled:opacity-40"
+            style={minValueUsd === step.key
+              ? 'background: var(--d-accent-soft); color: var(--d-accent-ink);'
+              : 'background: transparent; color: var(--d-text-3);'}
+            aria-pressed={minValueUsd === step.key}
+            disabled={priceUsd <= 0 && step.key > 0}
+            on:click={() => (minValueUsd = step.key)}
+          >
+            {step.label}
+          </button>
+        {/each}
+      </div>
+    </div>
+
+    <label class="d-tap flex items-center gap-1.5 text-[0.6875rem]" style="color: var(--d-text-2);">
+      <input type="checkbox" bind:checked={walletsOnly} class="accent-[var(--d-accent)]" />
+      Hide pools and programs
+      {#if poolCount > 0}
+        <span style="color: var(--d-text-3);">({poolCount})</span>
+      {/if}
+    </label>
+
+    {#if narrowed}
+      <button
+        type="button"
+        class="d-tap ml-auto rounded px-2 py-1 text-[0.6875rem] font-semibold transition-colors hover:bg-[var(--d-hover)]"
+        style="color: var(--d-accent);"
+        on:click={reset}
+      >
+        Clear filters
+      </button>
+    {/if}
+  </div>
 
   <div class="max-h-[640px] overflow-y-auto">
     <table class="w-full border-collapse text-sm">
@@ -133,7 +226,12 @@
         {#if filtered.length === 0}
           <tr>
             <td colspan="6" class="px-5 py-10 text-center text-[0.8125rem]" style="color: var(--d-text-3);">
-              No holder matches “{query}” in the rows loaded so far.
+              {#if needle}
+                No holder matches “{query}” in the {count(rows.length)} rows loaded so far.
+              {:else}
+                No holder in the {count(rows.length)} rows loaded so far matches these filters.
+                {#if hasMore}Loading more may find some.{/if}
+              {/if}
             </td>
           </tr>
         {/if}
