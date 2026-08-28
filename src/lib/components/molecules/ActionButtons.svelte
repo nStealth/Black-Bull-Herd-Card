@@ -1,6 +1,7 @@
 <script lang="ts">
   import Button from '$lib/components/ui/Button.svelte';
   import Message from '$lib/components/ui/Message.svelte';
+  import { CAMPAIGN_CLOSED, CAMPAIGN_CLOSED_ON } from '$lib/campaign';
 
   export let balance: number;
   export let hasSubmitted: boolean;
@@ -18,15 +19,21 @@
             d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
           />
         </svg>
-        Share & Get Your NFT! 🐂
+        {CAMPAIGN_CLOSED ? 'Share your card 🐂' : 'Share & Get Your NFT! 🐂'}
       </Button>
-      <Button variant="secondary" fullWidth on:click={onSubmit}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 2L11 13" />
-          <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-        </svg>
-        Submit Tweet Link
-      </Button>
+      {#if CAMPAIGN_CLOSED}
+        <p class="text-center text-xs text-text-muted">
+          Entries closed on {CAMPAIGN_CLOSED_ON}. The card is still yours to share and download.
+        </p>
+      {:else}
+        <Button variant="secondary" fullWidth on:click={onSubmit}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 2L11 13" />
+            <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+          </svg>
+          Submit Tweet Link
+        </Button>
+      {/if}
     {:else}
       <div class="flex flex-col items-center gap-3 p-6 bg-green-500/10 border border-green-500/30 rounded-2xl text-center animate-glow">
         <span class="text-5xl">🎉</span>

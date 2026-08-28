@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { CAMPAIGN_CLOSED_ON } from '$lib/campaign';
   import { connectWallet, disconnectWallet } from '$lib/solana';
   import Button from '$lib/components/ui/Button.svelte';
   import { cn } from '$lib/utils/cn';
@@ -88,7 +89,10 @@
     <div class="flex flex-col items-center gap-3 p-6 bg-red-500/10 border border-red-500/30 rounded-2xl text-center">
       <span class="text-3xl">⚠️</span>
       <p class="text-red-500 font-semibold">Phantom wallet not found!</p>
-      <p class="text-text-muted text-sm">You need Phantom to participate in this campaign.</p>
+      <p class="text-text-muted text-sm">
+        Phantom is only needed to look up your tier and generate a card. Claiming closed on
+        {CAMPAIGN_CLOSED_ON}.
+      </p>
       <a
         href="https://phantom.app/download"
         target="_blank"

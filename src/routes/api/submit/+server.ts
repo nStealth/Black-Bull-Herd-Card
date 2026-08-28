@@ -5,6 +5,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getEntry, saveTweet, getSubmittedCount } from '$lib/db';
+import { CAMPAIGN_CLOSED } from '$lib/campaign';
 import { clientKey, rateLimit } from '$lib/server/rateLimit';
 
 const RATE_LIMIT = 10;
@@ -41,6 +42,12 @@ function isValidTweetUrl(url: string): boolean {
 }
 
 export const POST: RequestHandler = async ({ request }) => {
+  // Closed means closed, and the server is where that has to be enforced —
+  // hiding the button only stops people who use the button.
+  if (CAMPAIGN_CLOSED) {
+    return json({ ok: false, reason: 'campaign_closed' }, { status: 410 });
+  }
+
   try {
     const limit = await rateLimit(`submit:${clientKey(request)}`, RATE_LIMIT, RATE_WINDOW_SEC);
     if (!limit.allowed) {
