@@ -187,7 +187,9 @@
               class="rounded-lg px-3 py-2"
               style="background: var(--d-accent-soft);"
             >
-              <p class="d-label">{usdCompact(amount)} would be</p>
+              <p class="d-label" style="color: var(--d-text-2);">
+                {usdCompact(amount)} would be
+              </p>
               <p class="d-numeric mt-0.5 text-sm font-bold" style="color: var(--d-accent-ink);">
                 {usd(row.futureValue, row.futureValue >= 1000 ? 0 : 2)}
               </p>
