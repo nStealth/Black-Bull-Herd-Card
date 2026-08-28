@@ -127,41 +127,43 @@
   </header>
 
   {#if trades.length > 0}
-    {#if minUsd > 0}
-      <p
-        class="border-b px-5 py-1.5 text-[0.625rem]"
-        style="border-color: var(--d-border); background: var(--d-surface-2); color: var(--d-text-3);"
-      >
-        Flow below covers the {count(sized.length)} prints at {sizeLabel}, not the whole tape.
-      </p>
-    {/if}
-
-    <div
-      class="grid grid-cols-3 border-b"
-      style="border-color: var(--d-border); background: var(--d-surface-2);"
-    >
-      <div class="px-5 py-2.5">
-        <p class="d-label">Buy vol</p>
-        <p class="d-numeric mt-0.5 text-xs font-semibold" style="color: var(--d-up);">
-          {usdCompact(buyVolume)}
-        </p>
-      </div>
-      <div class="px-5 py-2.5" style="border-left: 1px solid var(--d-border);">
-        <p class="d-label">Sell vol</p>
-        <p class="d-numeric mt-0.5 text-xs font-semibold" style="color: var(--d-down);">
-          {usdCompact(sellVolume)}
-        </p>
-      </div>
-      <div class="px-5 py-2.5" style="border-left: 1px solid var(--d-border);">
-        <p class="d-label">Net flow</p>
+    {#if sized.length > 0}
+      {#if minUsd > 0}
         <p
-          class="d-numeric mt-0.5 text-xs font-semibold"
-          style="color: {netFlow >= 0 ? 'var(--d-up)' : 'var(--d-down)'};"
+          class="border-b px-5 py-1.5 text-[0.625rem]"
+          style="border-color: var(--d-border); background: var(--d-surface-2); color: var(--d-text-3);"
         >
-          {netFlow >= 0 ? '+' : '−'}{usdCompact(Math.abs(netFlow))}
+          Flow below covers the {count(sized.length)} prints at {sizeLabel}, not the whole tape.
         </p>
+      {/if}
+
+      <div
+        class="grid grid-cols-3 border-b"
+        style="border-color: var(--d-border); background: var(--d-surface-2);"
+      >
+        <div class="px-5 py-2.5">
+          <p class="d-label">Buy vol</p>
+          <p class="d-numeric mt-0.5 text-xs font-semibold" style="color: var(--d-up);">
+            {usdCompact(buyVolume)}
+          </p>
+        </div>
+        <div class="px-5 py-2.5" style="border-left: 1px solid var(--d-border);">
+          <p class="d-label">Sell vol</p>
+          <p class="d-numeric mt-0.5 text-xs font-semibold" style="color: var(--d-down);">
+            {usdCompact(sellVolume)}
+          </p>
+        </div>
+        <div class="px-5 py-2.5" style="border-left: 1px solid var(--d-border);">
+          <p class="d-label">Net flow</p>
+          <p
+            class="d-numeric mt-0.5 text-xs font-semibold"
+            style="color: {netFlow >= 0 ? 'var(--d-up)' : 'var(--d-down)'};"
+          >
+            {netFlow >= 0 ? '+' : '−'}{usdCompact(Math.abs(netFlow))}
+          </p>
+        </div>
       </div>
-    </div>
+    {/if}
 
     <ul class="max-h-[360px] overflow-y-auto">
       {#each visible as trade, i (trade.txHash + trade.timestamp)}
